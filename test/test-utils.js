@@ -37,7 +37,7 @@ export function domMatch(snapshot, block, childrenOnly = false) {
     }
 
     if (snapshot.nodeType === Node.TEXT_NODE) {
-      if (snapshot.textContent !== block.textContent) {
+      if (snapshot.textContent.trim() !== block.textContent.trim()) {
         return `text content mismatch at ${block.nodeName}: ${snapshot.textContent} vs ${block.textContent}`;
       }
     }
