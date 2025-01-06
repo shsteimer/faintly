@@ -1,6 +1,6 @@
 # Faintly
 
-Faintly is an HTML templating library meant to be used with AEM Edge Delivery for rendering blocks. Its syntax is inspired by and may __faintly__ resemble that of Sightly/HTL.
+Faintly is an HTML templating library meant to be used with AEM Edge Delivery for rendering blocks. Its syntax is inspired by and may __faintly__ &#128579; resemble that of Sightly/HTL.
 
 ## Motivation (Why Does this Exist?)
 
