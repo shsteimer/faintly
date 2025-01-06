@@ -61,22 +61,17 @@ When in a repeat loop, it will also include:
 
  You can change the name of these by using the syntax `data-fly-repeat.name`. For example, if using `data-fly-repeat.card`, then the context will have `card`, `cardIndex`, and `cardNumber`.
 
- Similarly, any named tests of the form `data-fly-test.name` will have their boolean result stored in the context for future reference/re-use.
+ Similarly, any named tests of the form `data-fly-test.name` will have their boolean result stored in the context using that name for future reference/re-use.
 
 ## Directives
 
 Faintly supports the following directives.
 
 * `data-fly-repeat` - repeat an element for each item of a collection
-
 * `data-fly-test` - conditionally include an element
-
 * `data-fly-unwrap` - remove an element but keep it's child nodes
-
 * `data-fly-content` - replace the elements content/children
-
 * `data-fly-include` - replace the elements content/children with another template
-
 * `data-fly-attributes` - set attributes on the element
 
 ## Expressions
