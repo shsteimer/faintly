@@ -1,0 +1,24 @@
+{
+  "name": "faintly",
+  "version": "1.0.0",
+  "description": "HTML Markup Transformation Library for AEM Blocks",
+  "main": "src/faintly.js",
+  "scripts": {
+    "test": "web-test-runner --node-resolve --coverage",
+    "test:watch": "web-test-runner --node-resolve --coverage --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "author": "Sean Steimer",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@babel/eslint-parser": "7.25.9",
+    "@esm-bundle/chai": "4.3.4-fix.0",
+    "@web/test-runner": "0.19.0",
+    "@web/test-runner-commands": "0.9.0",
+    "@web/test-runner-mocha": "0.9.0",
+    "eslint": "8.57.1",
+    "eslint-config-airbnb-base": "15.0.0",
+    "eslint-plugin-import": "2.31.0"
+  }
+}
