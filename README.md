@@ -67,12 +67,15 @@ When in a repeat loop, it will also include:
 
 Faintly supports the following directives.
 
-* `data-fly-repeat` - repeat an element for each item of a collection
-* `data-fly-test` - conditionally include an element
-* `data-fly-unwrap` - remove an element but keep it's child nodes. Set the attribute value to an expression to make the unwrap conditional.
-* `data-fly-content` - replace the elements content/children
-* `data-fly-include` - replace the elements content/children with another template
-* `data-fly-attributes` - set attributes on the element
+* `data-fly-repeat` - Repeat an element for each item of a collection. Attribute value should be an expression that resolves to a collection of Nodes/Elements.
+* `data-fly-test` - Conditionally include an element. Attribute value should be an expression that can be coerced to a Boolean.
+* `data-fly-unwrap` - Remove an element but keep it's child nodes. Set the attribute value to an expression that can be coerced to a Boolean to make the unwrap conditional.
+* `data-fly-content` - Replace the elements content/children. Attribute value should be an expression that resolves to a Node/Element/String, or a collection there-of.
+* `data-fly-include` - Replace the elements content/children with another template. Attribute value can be:
+   * the name of a template: `data-fly-include="a-template-name"`
+   * the absolute path to a template file: `data-fly-include="/blocks/some-block/some-template.html"`
+   * both: `data-fly-include="/blocks/some-block/some-template.html#a-template-name"`
+* `data-fly-attributes` - Set attributes on the element. Attribute value should be an expression that resolves to a collection of key/value pairs.
 
 ## Expressions
 
