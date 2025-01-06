@@ -241,7 +241,7 @@ async function processRepeat(el, context) {
     cloned.removeAttribute(repeatAttrName);
 
     const repeatContext = { ...context };
-    repeatContext[contextName.toLowerCase()] = cloned;
+    repeatContext[contextName.toLowerCase()] = item;
     repeatContext[`${contextName.toLowerCase()}Index`] = i;
     repeatContext[`${contextName.toLowerCase()}Number`] = i + 1;
 

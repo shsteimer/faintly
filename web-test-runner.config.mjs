@@ -14,6 +14,7 @@ export default {
     exclude: [
       'test/fixtures/**',
       'test/snapshots/**',
+      'test/test-utils.js',
       'node_modules/**',
     ],
   },
