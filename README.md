@@ -67,17 +67,17 @@ When in a repeat loop, it will also include:
 
 Faintly supports the following directives.
 
-### `data-fly-repeat` - repeat an element for each item of a collection
+* `data-fly-repeat` - repeat an element for each item of a collection
 
-### `data-fly-test` - conditionally include an element
+* `data-fly-test` - conditionally include an element
 
-### `data-fly-unwrap` - remove an element but keep it's child nodes
+* `data-fly-unwrap` - remove an element but keep it's child nodes
 
-### `data-fly-content` - replace the elements content/children
+* `data-fly-content` - replace the elements content/children
 
-### `data-fly-include` - replace the elements content/children with another template
+* `data-fly-include` - replace the elements content/children with another template
 
-### `data-fly-attributes` - set attributes on the element
+* `data-fly-attributes` - set attributes on the element
 
 ## Expressions
 
