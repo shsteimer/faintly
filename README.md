@@ -40,7 +40,7 @@ export default async function decorate(block) {
 }
 ```
 
-See the [sample-block](test/sample-blocks/) tests for a robust set of examples.
+See the test [Sample Blocks](test/fixtures/blocks) for a robust set of examples.
 
 ## Rendering Context
 
