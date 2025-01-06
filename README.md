@@ -4,7 +4,7 @@ Faintly is an HTML templating library meant to be used with AEM Edge Delivery fo
 
 ## Motivation (Why Does this Exist?)
 
-I've always liked the developer ergonoamics (autocomplete, etc.) and separation of concerns you get from keeping html in it's own file, away from js and css. For simple blocks with basic DOM transformations, doing things directly in block decoration functions works great, but as things get more complex, this gets harder to manage and maintain, IMHO.
+I've always liked the developer ergonomics (autocomplete, etc.) and separation of concerns you get from keeping HTML in it's own file, distinct from js and css. For simple blocks with basic DOM transformations, doing things directly in block decoration functions works great, but as things get more complex, I find this gets harder to manage and maintain.
 
 I've experimented with other existing libraries (ejs templates, etc.) but wanted something simple and purpose built, so I just decided to build it myself.
 
@@ -44,23 +44,30 @@ See the [sample-block](test/sample-blocks/) tests for a robust set of examples.
 
 ## Rendering Context
 
-The rendering context is a javascript object used to provide data to the template. You can include anything you want in it, as needed. Faintly will always include the following:
+The rendering context is a javascript object used to provide data to the template and is also passed into functions to provide more dynamic data elements. It will always include the following elements:
 
 * block - a reference to the block element
+* currentNode - a reference to the current node/element being processed
 * blockName - the block name
 * template
    * path - the path to the template being rendered
    * name - the template name, if there is one
-* currentNode - a reference to the current node/element being processed
-* item - when in a repeat, the item currently being processed. You can change the name of this by using `data-fly-repeat.somename`
+
+When in a repeat loop, it will also include:
+
+* item - the item currently being processed
 * itemIndex - the 0-based index of the current item
 * itemNumber - the 1-based index of the current item
+
+ You can change the name of these by using the syntax `data-fly-repeat.name`. For example, if using `data-fly-repeat.card`, then the context will have `card`, `cardIndex`, and `cardNumber`.
+
+ Similarly, any named tests of the form `data-fly-test.name` will have their boolean result stored in the context for future reference/re-use.
 
 ## Directives
 
 Faintly supports the following directives.
 
-### `data-fly-repeat` - repeat an element over the items of a collection
+### `data-fly-repeat` - repeat an element for each item of a collection
 
 ### `data-fly-test` - conditionally include an element
 
