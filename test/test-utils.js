@@ -5,9 +5,20 @@ function cleanDom(node) {
   node.normalize();
   for (let n = 0; n < node.childNodes.length; n += 1) {
     const child = node.childNodes[n];
-    if (child.nodeType === Node.COMMENT_NODE || (child.nodeType === Node.TEXT_NODE && !/\S/.test(child.nodeValue))) {
+    if (child.nodeType === Node.COMMENT_NODE) {
       node.removeChild(child);
       n -= 1;
+    } else if (child.nodeType === Node.TEXT_NODE) {
+      if (!/\S/.test(child.nodeValue)) {
+        // only white space
+        node.removeChild(child);
+        n -= 1;
+      } else {
+        // more than one leading space
+        child.textContent = child.textContent.replace(/^\s+/g, ' ');
+        // more than one trailing space
+        child.textContent = child.textContent.replace(/\s+$/g, ' ');
+      }
     } else if (child.nodeType === Node.ELEMENT_NODE) {
       cleanDom(child);
     }
@@ -48,10 +59,7 @@ export function domMatch(snapshot, block, childrenOnly = false) {
   return true;
 }
 
-export async function compareDom(el, snapshotName) {
-  const resp = await fetch(`/test/snapshots/${snapshotName}.html`);
-  const markup = await resp.text();
-
+export async function compareDomInline(el, markup) {
   const dp = new DOMParser();
   const expected = dp.parseFromString(markup, 'text/html');
 
@@ -62,4 +70,11 @@ export async function compareDom(el, snapshotName) {
   if (!match) {
     expect.fail(el.innerHTML, markup, 'dom structures are not equal');
   }
+}
+
+export async function compareDom(el, snapshotName) {
+  const resp = await fetch(`/test/snapshots/${snapshotName}.html`);
+  const markup = await resp.text();
+
+  await compareDomInline(el, markup);
 }

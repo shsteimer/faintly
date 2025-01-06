@@ -106,22 +106,7 @@ async function processTextExpressions(node, context) {
   }
 }
 
-/**
- * process the attributes directive, as well as any expressions in non `data-fly-*` attributes
- *
- * @param {Element} el the element to process
- * @param {Object} context the rendering context
- */
-async function processAttributes(el, context) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const attr of el.attributes) {
-    if (!attr.name.startsWith('data-fly-')) {
-      // eslint-disable-next-line no-await-in-loop
-      const { updated, updatedText } = await resolveExpressions(attr.value, context);
-      if (updated) attr.value = updatedText;
-    }
-  }
-
+async function processAttributesDirective(el, context) {
   if (!el.hasAttribute('data-fly-attributes')) return;
 
   const attrsExpression = el.getAttribute('data-fly-attributes');
@@ -136,6 +121,25 @@ async function processAttributes(el, context) {
         el.setAttribute(k, v);
       }
     });
+  }
+}
+
+/**
+ * process the attributes directive, as well as any expressions in non `data-fly-*` attributes
+ *
+ * @param {Element} el the element to process
+ * @param {Object} context the rendering context
+ */
+async function processAttributes(el, context) {
+  processAttributesDirective(el, context);
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const attr of el.attributes) {
+    if (!attr.name.startsWith('data-fly-')) {
+      // eslint-disable-next-line no-await-in-loop
+      const { updated, updatedText } = await resolveExpressions(attr.value, context);
+      if (updated) el.setAttribute(attr.name, updatedText);
+    }
   }
 }
 
@@ -160,7 +164,7 @@ async function processTest(el, context) {
 
   const testResult = !!testData;
 
-  if (contextName) context[contextName] = testResult;
+  if (contextName) context[contextName.toLowerCase()] = testResult;
 
   return testResult;
 }
@@ -176,6 +180,7 @@ async function processUnwrap(el, context) {
   if (!el.hasAttribute('data-fly-unwrap')) return false;
 
   const unwrapExpression = el.getAttribute('data-fly-unwrap');
+  el.removeAttribute('data-fly-unwrap');
   if (unwrapExpression) {
     const unwrapVal = await resolveExpression(unwrapExpression, context);
 
@@ -193,6 +198,7 @@ async function processUnwrap(el, context) {
  */
 async function processContent(el, context) {
   if (!el.hasAttribute('data-fly-content')) return;
+
   const contentExpression = el.getAttribute('data-fly-content');
   const content = await resolveExpression(contentExpression, context);
 
@@ -235,9 +241,9 @@ async function processRepeat(el, context) {
     cloned.removeAttribute(repeatAttrName);
 
     const repeatContext = { ...context };
-    repeatContext[contextName] = cloned;
-    repeatContext[`${contextName}Index`] = i;
-    repeatContext[`${contextName}Number`] = i + 1;
+    repeatContext[contextName.toLowerCase()] = cloned;
+    repeatContext[`${contextName.toLowerCase()}Index`] = i;
+    repeatContext[`${contextName.toLowerCase()}Number`] = i + 1;
 
     // eslint-disable-next-line no-use-before-define
     const rendered = await renderNode(cloned, repeatContext);
