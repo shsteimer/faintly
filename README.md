@@ -81,4 +81,4 @@ Faintly supports the following directives.
 
 ## Expressions
 
-For repeat, test, content, and attributes, as well as within text nodes and attribute values, faintly supports a simple expression syntax for resolving data from the rendering context. It supports only object dot-notation, but will call (optionally async) functions as well.
+For repeat, test, content, and attributes, as well as within text nodes and "normal" attribute values, faintly supports a simple expression syntax for resolving data from the rendering context. It supports only object dot-notation, but will call (optionally async) functions as well. In HTML text and normal attributes, wrap your expression in `${}`. In a `data-fly-*` attribute, just set it directly as the attributes value.
