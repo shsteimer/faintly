@@ -2,7 +2,7 @@ import { createOptimizedPicture } from '../../scripts/aem.js';
 import { renderBlock } from '../../../../src/faintly.js';
 
 function transformCardColumn(context) {
-  const col = context.item;
+  const col = context.card;
 
   const picture = col.querySelector('picture');
 
