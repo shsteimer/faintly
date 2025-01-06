@@ -357,12 +357,11 @@ async function transformElement(el, template, context) {
  * @param {Object} context the rendering context
  */
 export async function renderBlock(block, context = {}) {
+  context.block = block;
   context.blockName = block.dataset.blockName;
   context.codeBasePath = context.codeBasePath || (window.hlx ? window.hlx.codeBasePath : '');
-  const template = await resolveTemplate(context);
 
-  context.rows = [...block.querySelectorAll(':scope > div')].map((row) => ({ items: row.children }));
-  context.block = block;
+  const template = await resolveTemplate(context);
 
   await transformElement(block, template, context);
 }

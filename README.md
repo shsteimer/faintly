@@ -42,6 +42,20 @@ export default async function decorate(block) {
 
 See the [sample-block](test/sample-blocks/) tests for a robust set of examples.
 
+## Rendering Context
+
+The rendering context is a javascript object used to provide data to the template. You can include anything you want in it, as needed. Faintly will always include the following:
+
+* block - a reference to the block element
+* blockName - the block name
+* template
+   * path - the path to the template being rendered
+   * name - the template name, if there is one
+* currentNode - a reference to the current node/element being processed
+* item - when in a repeat, the item currently being processed. You can change the name of this by using `data-fly-repeat.somename`
+* itemIndex - the 0-based index of the current item
+* itemNumber - the 1-based index of the current item
+
 ## Directives
 
 Faintly supports the following directives.
@@ -60,4 +74,4 @@ Faintly supports the following directives.
 
 ## Expressions
 
-For repeat, test, content, and attributes, as well as within text nodes and attribute values, faintly supports a simple expression syntax for resolving data from the rendering context.
+For repeat, test, content, and attributes, as well as within text nodes and attribute values, faintly supports a simple expression syntax for resolving data from the rendering context. It supports only object dot-notation, but will call (optionally async) functions as well.

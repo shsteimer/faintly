@@ -1,10 +1,10 @@
 <template>
-  <div data-fly-repeat="rows" data-fly-include="accordion-item" data-fly-unwrap></div>
+  <div data-fly-repeat="block.children" data-fly-include="accordion-item" data-fly-unwrap></div>
 </template>
   
 <template data-fly-name="accordion-item">
   <details class="accordion-item">
-    <summary class="accordion-item-label" data-fly-content="item.items.0.children"></summary>
-    <div class="accordion-item-body" data-fly-content="item.items.1.children"></div>
+    <summary class="accordion-item-label" data-fly-content="item.children.0.children"></summary>
+    <div class="accordion-item-body" data-fly-content="item.children.1.children"></div>
   </details>
 </template>
