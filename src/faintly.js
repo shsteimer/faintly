@@ -246,7 +246,7 @@ async function processRepeat(el, context) {
     repeatContext[`${contextName.toLowerCase()}Number`] = i + 1;
 
     // eslint-disable-next-line no-use-before-define
-    const rendered = await renderNode(cloned, repeatContext);
+    const [rendered] = await renderNode(cloned, repeatContext);
     return rendered;
   });
 
@@ -266,7 +266,7 @@ async function processInclude(el, context) {
   const includeValue = el.getAttribute('data-fly-include');
   el.removeAttribute('data-fly-include');
 
-  let templatePath = context.template.path;
+  let templatePath = context.template ? context.template.path : '';
   let templateName = includeValue;
   if (templateName.startsWith('/')) {
     const [path, name] = templateName.split('#');
@@ -284,7 +284,7 @@ async function processInclude(el, context) {
 
   const template = await resolveTemplate(includeContext);
   // eslint-disable-next-line no-use-before-define
-  await transformElement(el, template, context);
+  await transformElement(el, template, includeContext);
 }
 
 /**
@@ -337,7 +337,7 @@ export async function renderTemplate(template, context) {
 }
 
 /**
- * transform the element, replacing it's cildren with the content from the template
+ * transform the element, replacing it's children with the content from the template
  * @param {Element} el the element
  * @param {Element} template the template element
  * @param {Object} context the rendering context
