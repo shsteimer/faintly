@@ -1,12 +1,12 @@
 # Faintly
 
-Faintly is an HTML templating library meant to be used with AEM Edge Delivery for rendering blocks. Its syntax is inspired by and may faintly resemlbe that of Sightly/HTL.
+Faintly is an HTML templating library meant to be used with AEM Edge Delivery for rendering blocks. Its syntax is inspired by and may __faintly__ resemble that of Sightly/HTL.
 
 ## Motivation (Why Does this Exist?)
 
-I've always liked the developer ergonamics (autocomplete, etc.) and separation of concerns you get from keeping html in it's own file, away from js and css. For simple blocks with basic DOM transformations, doing things right in block js is fine, but as things get more complex, this gets harder to manage and maintain, IMHO.
+I've always liked the developer ergonoamics (autocomplete, etc.) and separation of concerns you get from keeping html in it's own file, away from js and css. For simple blocks with basic DOM transformations, doing things right in block js is fine, but as things get more complex, this gets harder to manage and maintain, IMHO.
 
-I experimented with other existing libraries (ejs templates, etc.) but wanted something simple and purpose built.
+I've experimented with other existing libraries (ejs templates, etc.) but wanted something simple and purpose built.
 
 
 ## Getting Started
@@ -44,7 +44,7 @@ See the [sample-block](test/sample-blocks/) tests for a robust set of examples.
 
 ## Directives
 
-Faintly supports the following directives. See the tests for examples.
+Faintly supports the following directives.
 
 ### `data-fly-repeat` - repeat an element over the items of a collection
 
@@ -52,9 +52,9 @@ Faintly supports the following directives. See the tests for examples.
 
 ### `data-fly-unwrap` - remove an element but keep it's child nodes
 
-### `data-fly-content` - replace the elements content
+### `data-fly-content` - replace the elements content/children
 
-### `data-fly-include` - include another template
+### `data-fly-include` - replace the elements content/children with another template
 
 ### `data-fly-attributes` - set attributes on the element
 
