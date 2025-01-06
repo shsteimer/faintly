@@ -268,9 +268,10 @@ async function processInclude(el, context) {
 
   const includeValue = el.getAttribute('data-fly-include');
   el.removeAttribute('data-fly-include');
+  const { updatedText } = await resolveExpressions(includeValue, context);
 
   let templatePath = context.template ? context.template.path : '';
-  let templateName = includeValue;
+  let templateName = updatedText;
   if (templateName.startsWith('/')) {
     const [path, name] = templateName.split('#');
     templatePath = path;
