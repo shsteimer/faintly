@@ -246,12 +246,15 @@ async function processRepeat(el, context) {
     repeatContext[`${contextName.toLowerCase()}Number`] = i + 1;
 
     // eslint-disable-next-line no-use-before-define
-    const [rendered] = await renderNode(cloned, repeatContext);
+    const rendered = await renderNode(cloned, repeatContext);
     return rendered;
   });
 
   const repeated = await Promise.all(promises);
-  return repeated;
+
+  const flattened = repeated.flat();
+
+  return flattened;
 }
 
 /**
@@ -331,9 +334,9 @@ async function renderNode(node, context) {
  * @param {Object} context the rendering context
  */
 export async function renderTemplate(template, context) {
-  const [fragment] = await renderNode(template.content, context);
+  const fragment = await renderNode(template.content, context);
 
-  return fragment;
+  return fragment[0];
 }
 
 /**

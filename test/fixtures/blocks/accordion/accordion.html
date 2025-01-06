@@ -1,5 +1,9 @@
 <template>
-  <details class="accordion-item" data-fly-repeat="rows">
+  <div data-fly-repeat="rows" data-fly-include="accordion-item" data-fly-unwrap></div>
+  </template>
+  
+  <template data-fly-name="accordion-item">
+    <details class="accordion-item">
     <summary class="accordion-item-label" data-fly-content="getLabel"></summary>
     <div class="accordion-item-body" data-fly-content="getBody"></div>
   </details>
