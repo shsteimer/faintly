@@ -1,0 +1,36 @@
+{
+  "data": [
+    {
+      "title": "The Rise of AI in Everyday Life",
+      "description": "An in-depth look at how artificial intelligence is becoming a part of our daily routines.",
+      "image": "https://example.com/images/ai.jpg",
+      "link": "https://example.com/articles/rise-of-ai",
+      "featured": true
+    },
+    {
+      "title": "Exploring the Depths of the Ocean",
+      "description": "Discover the mysteries and wonders that lie beneath the ocean's surface.",
+      "image": "https://example.com/images/ocean.jpg",
+      "link": "https://example.com/articles/ocean-depths"
+    },
+    {
+      "title": "The Future of Renewable Energy",
+      "description": "How renewable energy sources are shaping the future of our planet.",
+      "image": "https://example.com/images/renewable-energy.jpg",
+      "link": "https://example.com/articles/future-of-renewable-energy"
+    },
+    {
+      "title": "Advancements in Space Exploration",
+      "description": "A look at the latest advancements and missions in space exploration.",
+      "image": "https://example.com/images/space.jpg",
+      "link": "https://example.com/articles/space-exploration"
+    },
+    {
+      "title": "The Impact of Social Media on Society",
+      "description": "Analyzing the effects of social media on modern society and human behavior.",
+      "image": "https://example.com/images/social-media.jpg",
+      "link": "https://example.com/articles/social-media-impact",
+      "featured": true
+    }
+  ]
+}

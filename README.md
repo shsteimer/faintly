@@ -6,8 +6,7 @@ Faintly is an HTML templating library meant to be used with AEM Edge Delivery fo
 
 I've always liked the developer ergonomics (autocomplete, etc.) and separation of concerns you get from keeping HTML in it's own file, distinct from js and css. For simple blocks with basic DOM transformations, doing things directly in block decoration functions works great, but as things get more complex, I find this gets harder to manage and maintain.
 
-I've experimented with other existing libraries (ejs templates, etc.) but wanted something simple and purpose built, so I just decided to build it myself.
-
+I've experimented with other existing libraries (ejs templates, etc.) but wanted something simple and purpose built.
 
 ## Getting Started
 

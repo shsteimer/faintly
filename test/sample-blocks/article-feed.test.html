@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Article Feed Block Tests</title>
+  <script src="/test/fixtures/scripts/aem.js" type="module"></script>
+  <script src="/test/fixtures/scripts/scripts.js" type="module"></script>
+</head>
+
+<body>
+  <header></header>
+  <main>
+    <div>
+      <div class="article-feed"></div>
+    </div>
+  </main>
+  <footer></footer>
+  <script type="module">
+    /* eslint-env mocha */
+    import { runTests } from '@web/test-runner-mocha';
+    import { pageReady, compareDom } from '../test-utils.js';
+
+    runTests(() => {
+      describe('sample-blocks/cards', () => {
+        it('loads article feed block', async () => {
+          await pageReady();
+          const block = document.querySelector('.article-feed');
+          await compareDom(block, 'sample-blocks/article-feed');
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>
