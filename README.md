@@ -41,6 +41,10 @@ export default async function decorate(block) {
 
 See the test [Sample Blocks](test/fixtures/blocks) for a robust set of examples.
 
+## Templates
+
+Each template should be wrapped in a `template` tag. Templates can optionally be named by adding a `data-fly-name` attribute.
+
 ## Rendering Context
 
 The rendering context is a javascript object used to provide data to the template and is also passed into functions to provide more dynamic data elements. It will always include the following elements:
