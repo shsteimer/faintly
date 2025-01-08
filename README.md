@@ -43,7 +43,7 @@ See the test [Sample Blocks](test/fixtures/blocks) for a robust set of examples.
 
 ## Templates
 
-Each template should be wrapped in a `template` tag. Templates can optionally be named by adding a `data-fly-name` attribute.
+Each template should be wrapped in a `template` tag. Templates can optionally be named by adding a `data-fly-name` attribute e.g. `<template data-fly-name="card"></template>`.
 
 ## Rendering Context
 
