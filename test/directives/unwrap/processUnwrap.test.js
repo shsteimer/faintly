@@ -16,6 +16,10 @@ describe('processUnwrap', () => {
     el.setAttribute('data-fly-unwrap', 'includeDiv');
     const result2 = await processUnwrap(el, { includeDiv: false });
     expect(result2).to.equal(false);
+
+    el.setAttribute('data-fly-unwrap', '');
+    const result3 = await processUnwrap(el, {});
+    expect(result3).to.equal(true, 'unwrap with no expression should always be true');
   });
 
   it('always returns a boolean', async () => {
