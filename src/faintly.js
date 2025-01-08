@@ -131,11 +131,11 @@ async function processAttributesDirective(el, context) {
 async function processAttributes(el, context) {
   processAttributesDirective(el, context);
 
-  const attrPromises = [...el.attributes]
-    .filter((attr) => !attr.name.startsWith('data-fly-'))
-    .map(async (attr) => {
-      const { updated, updatedText } = await resolveExpressions(attr.value, context);
-      if (updated) attr.value = updatedText;
+  const attrPromises = el.getAttributeNames()
+    .filter((attrName) => !attrName.startsWith('data-fly-'))
+    .map(async (attrName) => {
+      const { updated, updatedText } = await resolveExpressions(el.getAttribute(attrName), context);
+      if (updated) el.setAttribute(attrName, updatedText);
     });
   await Promise.all(attrPromises);
 }
