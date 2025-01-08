@@ -74,16 +74,21 @@ When in a repeat loop, it will also include:
 
 Faintly supports the following directives.
 
+* `data-fly-test` - Conditionally include an element. Attribute value should be an expression that can be coerced to a Boolean, element is included only if the value is truthy.
+* `data-fly-not` - Conditionally exclude an element. Attribute value should be an expression that can be coerced to a Boolean, element is included only if the value is falsy.
 * `data-fly-repeat` - Repeat an element for each item of a collection. Attribute value should be an expression that resolves to a collection of Nodes/Elements.
-* `data-fly-test` - Conditionally include an element. Attribute value should be an expression that can be coerced to a Boolean.
-* `data-fly-not` - Conditionally exclude an element. Attribute value should be an expression that can be coerced to a Boolean.
-* `data-fly-unwrap` - Remove an element but keep it's child nodes. Set the attribute value to an expression that can be coerced to a Boolean to make the unwrap conditional.
+* `data-fly-attributes` - Set attributes on the element. Attribute value should be an expression that resolves to a collection of key/value pairs.
 * `data-fly-content` - Replace the elements content/children. Attribute value should be an expression that resolves to a Node/Element/String, or a collection there-of.
 * `data-fly-include` - Replace the elements content/children with another template. Attribute value can be:
    * the name of a template: `data-fly-include="a-template-name"`
    * the absolute path to a template file: `data-fly-include="/blocks/some-block/some-template.html"`
    * both: `data-fly-include="/blocks/some-block/some-template.html#a-template-name"`
-* `data-fly-attributes` - Set attributes on the element. Attribute value should be an expression that resolves to a collection of key/value pairs.
+* `data-fly-unwrap` - Remove an element but keep it's child nodes. Set the attribute value to an expression that can be coerced to a Boolean to make the unwrap conditional.
+
+> [!IMPORTANT]  
+> Directives are evaluated in a fixed order, as listed above, regardless of the order you place them on the element.
+> 
+> This means, for example, that the context item set in `data-fly-repeat` can be used in `data-fly-include` on the same element, but not in a `data-fly-test`.
 
 ## Expressions
 

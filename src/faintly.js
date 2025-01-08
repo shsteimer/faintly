@@ -79,10 +79,8 @@ async function resolveExpressions(str, context) {
 
   if (promises.length > 0) {
     const promiseResults = await Promise.all(promises);
-    let i = 0;
     const updatedText = str.replaceAll(regexp, () => {
-      const result = promiseResults[i];
-      i += 1;
+      const result = promiseResults.shift();
       return result;
     });
 
@@ -133,14 +131,13 @@ async function processAttributesDirective(el, context) {
 async function processAttributes(el, context) {
   processAttributesDirective(el, context);
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const attr of el.attributes) {
-    if (!attr.name.startsWith('data-fly-')) {
-      // eslint-disable-next-line no-await-in-loop
+  const attrPromises = [...el.attributes]
+    .filter((attr) => !attr.name.startsWith('data-fly-'))
+    .map(async (attr) => {
       const { updated, updatedText } = await resolveExpressions(attr.value, context);
-      if (updated) el.setAttribute(attr.name, updatedText);
-    }
-  }
+      if (updated) attr.value = updatedText;
+    });
+  await Promise.all(attrPromises);
 }
 
 /**
