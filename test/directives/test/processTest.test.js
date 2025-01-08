@@ -18,6 +18,17 @@ describe('processTest', () => {
     expect(result2).to.equal(false);
   });
 
+  it('data-fly-not -- return true or false based on resolved value', async () => {
+    const el = document.createElement('div');
+    el.setAttribute('data-fly-not', 'includeDiv');
+    const result = await processTest(el, { includeDiv: true });
+    expect(result).to.equal(false);
+
+    el.setAttribute('data-fly-not', 'includeDiv');
+    const result2 = await processTest(el, { includeDiv: false });
+    expect(result2).to.equal(true);
+  });
+
   it('stores result in context for re-use', async () => {
     const context = {
       includeDiv: true,

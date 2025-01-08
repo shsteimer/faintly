@@ -11,7 +11,6 @@ export default async function decorate(block) {
   await renderBlock(block, {
     fetchArticles,
     isFeaturedArticle: (context) => context.article.featured,
-    isNotFeaturedArticle: (context) => !context.featured,
     articleLinkAttrs: (context) => ({
       href: context.article.link,
       title: context.article.title,

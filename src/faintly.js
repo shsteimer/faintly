@@ -151,7 +151,7 @@ async function processAttributes(el, context) {
  * @returns {Promise<boolean>} indicator if node should be rendered
  */
 async function processTest(el, context) {
-  const testAttrName = el.getAttributeNames().find((attrName) => attrName.startsWith('data-fly-test'));
+  const testAttrName = el.getAttributeNames().find((attrName) => attrName.startsWith('data-fly-test') || attrName.startsWith('data-fly-not'));
   if (!testAttrName) return true;
 
   const nameParts = testAttrName.split('.');
@@ -162,7 +162,7 @@ async function processTest(el, context) {
 
   el.removeAttribute(testAttrName);
 
-  const testResult = !!testData;
+  const testResult = testAttrName.startsWith('data-fly-not') ? !testData : !!testData;
 
   if (contextName) context[contextName.toLowerCase()] = testResult;
 
