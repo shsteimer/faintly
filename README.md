@@ -57,8 +57,9 @@ When in a repeat loop, it will also include:
 * item - the item currently being processed
 * itemIndex - the 0-based index of the current item
 * itemNumber - the 1-based index of the current item
+* itemKey - the key for the item (useful when repeating over objects and not arrays)
 
- You can change the name of these by using the syntax `data-fly-repeat.name`. For example, if using `data-fly-repeat.card`, then the context will have `card`, `cardIndex`, and `cardNumber`.
+ You can change the name of these by using the syntax `data-fly-repeat.name`. For example, if using `data-fly-repeat.card`, then the context will have `card`, `cardIndex`, `cardNumber`, and `cardKey`.
 
  Similarly, any named tests of the form `data-fly-test.name` will have their boolean result stored in the context using that name for future reference/re-use.
 

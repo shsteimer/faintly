@@ -236,7 +236,7 @@ async function processRepeat(el, context) {
   const arr = await resolveExpression(repeatExpression, context);
   if (!arr) return [];
 
-  const promises = Object.values(arr).map(async (item, i) => {
+  const promises = Object.entries(arr).map(async ([key, item], i) => {
     const cloned = el.cloneNode(true);
     cloned.removeAttribute(repeatAttrName);
 
@@ -244,6 +244,7 @@ async function processRepeat(el, context) {
     repeatContext[contextName.toLowerCase()] = item;
     repeatContext[`${contextName.toLowerCase()}Index`] = i;
     repeatContext[`${contextName.toLowerCase()}Number`] = i + 1;
+    repeatContext[`${contextName.toLowerCase()}Key`] = key;
 
     // eslint-disable-next-line no-use-before-define
     const rendered = await renderNode(cloned, repeatContext);
@@ -288,7 +289,7 @@ async function processInclude(el, context) {
 
   const template = await resolveTemplate(includeContext);
   // eslint-disable-next-line no-use-before-define
-  await transformElement(el, template, includeContext);
+  await renderElementWithTemplate(el, template, includeContext);
 }
 
 /**
@@ -334,7 +335,7 @@ async function renderNode(node, context) {
  * @param {Element} template the template to render
  * @param {Object} context the rendering context
  */
-export async function renderTemplate(template, context) {
+async function renderTemplate(template, context) {
   const fragment = await renderNode(template.content, context);
 
   return fragment[0];
@@ -346,9 +347,21 @@ export async function renderTemplate(template, context) {
  * @param {Element} template the template element
  * @param {Object} context the rendering context
  */
-async function transformElement(el, template, context) {
+async function renderElementWithTemplate(el, template, context) {
   const rendered = await renderTemplate(template, context);
   el.replaceChildren(rendered);
+}
+
+/**
+ * Transform an element using an HTML template
+ *
+ * @param {Element} block the block element
+ * @param {Object} context the rendering context
+ */
+export async function renderElement(el, context) {
+  const template = await resolveTemplate(context);
+
+  await renderElementWithTemplate(el, template, context);
 }
 
 /**
@@ -362,9 +375,7 @@ export async function renderBlock(block, context = {}) {
   context.blockName = block.dataset.blockName;
   context.codeBasePath = context.codeBasePath || (window.hlx ? window.hlx.codeBasePath : '');
 
-  const template = await resolveTemplate(context);
-
-  await transformElement(block, template, context);
+  await renderElement(block, context);
 }
 
 export const exportForTesting = {
