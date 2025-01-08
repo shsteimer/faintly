@@ -63,8 +63,8 @@ When in a repeat loop, it will also include:
 
  Similarly, any named tests of the form `data-fly-test.name` will have their boolean result stored in the context using that name for future reference/re-use.
 
-[!NOTE]  
-Because element attributes are case-insensitive, context names are converted to lower case. e.g. `data-fly-test.myTest` will be set in the context as `mytest`.
+> [!NOTE]  
+> Because element attributes are case-insensitive, context names are converted to lower case. e.g. `data-fly-test.myTest` will be set in the context as `mytest`.
 
 ## Directives
 
