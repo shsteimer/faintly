@@ -1,6 +1,16 @@
 export default {
-  files: [
-    'test/**/*.test.{html,js}',
+  groups: [
+    {
+      name: 'unit',
+      files: [
+        'test/**/*.test.{html,js}',
+        '!test/performance/**',
+      ],
+    },
+    {
+      name: 'perf',
+      files: 'test/performance/**/*.test.js',
+    },
   ],
   coverageConfig: {
     report: true,

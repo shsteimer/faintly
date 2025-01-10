@@ -163,28 +163,38 @@ async function processTest(el, context) {
 
   if (contextName) context[contextName.toLowerCase()] = testResult;
 
+  if (!testResult) {
+    el.remove();
+  }
+
   return testResult;
 }
 
 /**
- * process the unwrap directive
+ * process the unwrap directive, leavving the attribute only if it resolves to true
  *
  * @param {Element} el the element to process
  * @param {Object} context the rendering context
- * @returns {Promise<boolean>} if the element should be unwrapped
+ * @returns {Promise<void>}
  */
-async function processUnwrap(el, context) {
-  if (!el.hasAttribute('data-fly-unwrap')) return false;
+async function resolveUnwrap(el, context) {
+  if (!el.hasAttribute('data-fly-unwrap')) return;
 
   const unwrapExpression = el.getAttribute('data-fly-unwrap');
-  el.removeAttribute('data-fly-unwrap');
   if (unwrapExpression) {
-    const unwrapVal = await resolveExpression(unwrapExpression, context);
+    const unwrapVal = !!(await resolveExpression(unwrapExpression, context));
 
-    return !!unwrapVal;
+    if (!unwrapVal) {
+      el.removeAttribute('data-fly-unwrap');
+    }
   }
+}
 
-  return true;
+function processUnwraps(el) {
+  el.querySelectorAll('[data-fly-unwrap]').forEach((unwrapEl) => {
+    unwrapEl.before(...unwrapEl.childNodes);
+    unwrapEl.remove();
+  });
 }
 
 /**
@@ -219,21 +229,26 @@ async function processContent(el, context) {
  *
  * @param {Element} el the element to potentially be repeated
  * @param {Object} context the rendering context
- * @returns {Promise<undefined|Array<Element>>} undefined if the node is not repeated,
- * or an array of the repeated elements
+ * @returns {Promise<Boolean>} if the node is repeated or not
  */
 async function processRepeat(el, context) {
   const repeatAttrName = el.getAttributeNames().find((attrName) => attrName.startsWith('data-fly-repeat'));
-  if (!repeatAttrName) return undefined;
+  if (!repeatAttrName) return false;
 
   const nameParts = repeatAttrName.split('.');
   const contextName = nameParts[1] || 'item';
 
   const repeatExpression = el.getAttribute(repeatAttrName);
   const arr = await resolveExpression(repeatExpression, context);
-  if (!arr) return [];
+  if (!arr || Object.keys(arr).length === 0) {
+    el.remove();
+    return false;
+  }
 
-  const promises = Object.entries(arr).map(async ([key, item], i) => {
+  let i = 0;
+  let afterEL = el;
+  // eslint-disable-next-line no-restricted-syntax
+  for (const [key, item] of Object.entries(arr)) {
     const cloned = el.cloneNode(true);
     cloned.removeAttribute(repeatAttrName);
 
@@ -243,16 +258,17 @@ async function processRepeat(el, context) {
     repeatContext[`${contextName.toLowerCase()}Number`] = i + 1;
     repeatContext[`${contextName.toLowerCase()}Key`] = key;
 
-    // eslint-disable-next-line no-use-before-define
-    const rendered = await renderNode(cloned, repeatContext);
-    return rendered;
-  });
+    afterEL.after(cloned);
+    afterEL = cloned;
 
-  const repeated = await Promise.all(promises);
+    // eslint-disable-next-line no-use-before-define, no-await-in-loop
+    await processNode(cloned, repeatContext);
+    cloned.setAttribute('data-fly-ignore', '');
+    i += 1;
+  }
 
-  const flattened = repeated.flat();
-
-  return flattened;
+  el.remove();
+  return true;
 }
 
 /**
@@ -284,9 +300,8 @@ async function processInclude(el, context) {
     },
   };
 
-  const template = await resolveTemplate(includeContext);
   // eslint-disable-next-line no-use-before-define
-  await renderElementWithTemplate(el, template, includeContext);
+  await renderElement(el, includeContext);
 }
 
 /**
@@ -294,37 +309,41 @@ async function processInclude(el, context) {
  *
  * @param {Node} node the node to render
  * @param {Object} context the rendering context
- * @returns {Promise<Array<Node>>} the set of rendered nodes as a result of rendering the given node
+ * @returns {Promise<void>} a promise that resolves when the node has been rendered
  */
-async function renderNode(node, context) {
+async function processNode(node, context) {
   context.currentNode = node;
-  let unwrap = false;
   if (node.nodeType === Node.ELEMENT_NODE) {
+    if (node.hasAttribute('data-fly-ignore')) {
+      node.removeAttribute('data-fly-ignore');
+      return false;
+    }
+
     const shouldRender = await processTest(node, context);
-    if (!shouldRender) return [];
+    if (!shouldRender) return true;
 
     const repeated = await processRepeat(node, context);
-    if (repeated) return repeated;
+    if (repeated) return true;
 
     await processAttributes(node, context);
 
     await processContent(node, context);
     await processInclude(node, context);
 
-    unwrap = await processUnwrap(node, context);
+    await resolveUnwrap(node, context);
   } else if (node.nodeType === Node.TEXT_NODE) {
     await processTextExpressions(node, context);
   }
 
-  const cloned = node.cloneNode(false);
+  // eslint-disable-next-line no-restricted-syntax
   for (let i = 0; i < node.childNodes.length; i += 1) {
     const child = node.childNodes[i];
     // eslint-disable-next-line no-await-in-loop
-    const renderedChildren = await renderNode(child, context);
-    cloned.append(...renderedChildren);
+    const wasRemoved = await processNode(child, context);
+    if (wasRemoved) i -= 1;
   }
 
-  return unwrap ? [...cloned.childNodes] : [cloned];
+  return false;
 }
 
 /**
@@ -333,9 +352,12 @@ async function renderNode(node, context) {
  * @param {Object} context the rendering context
  */
 async function renderTemplate(template, context) {
-  const fragment = await renderNode(template.content, context);
+  const templateClone = template.cloneNode(true);
+  await processNode(templateClone.content, context);
 
-  return fragment[0];
+  processUnwraps(templateClone.content);
+
+  return templateClone;
 }
 
 /**
@@ -346,7 +368,7 @@ async function renderTemplate(template, context) {
  */
 async function renderElementWithTemplate(el, template, context) {
   const rendered = await renderTemplate(template, context);
-  el.replaceChildren(rendered);
+  el.replaceChildren(rendered.content);
 }
 
 /**
@@ -385,5 +407,6 @@ export const exportForTesting = {
   processContent,
   processInclude,
   processRepeat,
-  processUnwrap,
+  resolveUnwrap,
+  processUnwraps,
 };
