@@ -8,21 +8,30 @@ async function resolveTemplate(context) {
   context.template = context.template || {};
   context.template.path = context.template.path || `${context.codeBasePath}/blocks/${context.blockName}/${context.blockName}.html`;
 
-  const resp = await fetch(context.template.path);
-  if (!resp.ok) {
-    throw new Error(`Failed to fetch template from ${context.template.path} for block ${context.blockName}.`);
+  const templateId = `faintly-template-${context.template.path}#${context.template.name || ''}`.toLowerCase().replace(/[^0-9a-z]/gi, '-');
+  let template = document.getElementById(templateId);
+  if (!template) {
+    const resp = await fetch(context.template.path);
+    if (!resp.ok) {
+      throw new Error(`Failed to fetch template from ${context.template.path} for block ${context.blockName}.`);
+    }
+
+    const markup = await resp.text();
+
+    const dp = new DOMParser();
+    const templateDom = dp.parseFromString(markup, 'text/html');
+
+    templateDom.querySelectorAll('template').forEach((t) => {
+      const name = t.getAttribute('data-fly-name') || '';
+      t.id = `faintly-template-${context.template.path}#${name}`.toLowerCase().replace(/[^0-9a-z]/gi, '-');
+
+      document.body.append(t);
+    });
   }
 
-  const markup = await resp.text();
-
-  const dp = new DOMParser();
-  const templateDom = dp.parseFromString(markup, 'text/html');
-
-  let template;
-  if (context.template.name) {
-    template = templateDom.querySelector(`template[data-fly-name="${context.template.name}"]`);
-  } else {
-    template = templateDom.querySelector('template');
+  template = document.getElementById(templateId);
+  if (!template) {
+    throw new Error(`Failed to find template with id ${templateId}.`);
   }
 
   return template;
@@ -302,6 +311,7 @@ async function processInclude(el, context) {
 
   // eslint-disable-next-line no-use-before-define
   await renderElement(el, includeContext);
+  el.setAttribute('data-fly-ignore-children', '');
 }
 
 /**
@@ -333,6 +343,11 @@ async function processNode(node, context) {
     await resolveUnwrap(node, context);
   } else if (node.nodeType === Node.TEXT_NODE) {
     await processTextExpressions(node, context);
+  }
+
+  if (node.nodeType === Node.ELEMENT_NODE && node.hasAttribute('data-fly-ignore-children')) {
+    node.removeAttribute('data-fly-ignore-children');
+    return false;
   }
 
   // eslint-disable-next-line no-restricted-syntax

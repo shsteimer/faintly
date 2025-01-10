@@ -9,7 +9,7 @@ export default {
     },
     {
       name: 'perf',
-      files: 'test/performance/**/*.test.js',
+      files: 'test/performance/**/*.test.{html,js}',
     },
   ],
   coverageConfig: {
