@@ -6,6 +6,7 @@
   "scripts": {
     "test": "web-test-runner --node-resolve --coverage",
     "test:watch": "web-test-runner --node-resolve --coverage --watch",
+    "test:ci": "web-test-runner --node-resolve",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
