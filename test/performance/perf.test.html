@@ -30,7 +30,7 @@
 
       const p = ['.faintly-rendered', '.traditionally-rendered'].map(async (selector) => {
         const container = document.querySelector(selector);
-        for (let i = 0; i < 250; i++) {
+        for (let i = 0; i < 300; i++) {
           const blockToAdd = sampleBlockNames[i % sampleBlockNames.length];
 
           const resp = await fetch(`/test/sample-blocks/${blockToAdd}.test.html`);
@@ -69,15 +69,11 @@
             const blocks = [faintlyBlocks[i], traditionallyBlocks[i]];
 
             expect(blocks[0].dataset.blockName).to.equal(blocks[1].dataset.blockName);
-            const mod = await import(`/test/fixtures/blocks/${blocks[0].dataset.blockName}/${blocks[0].dataset.blockName}.js`);
-
             const blockPromises = blocks.map(async (block, i) => {
               const blockStart = performance.now();
-              if (i === 0) {
-                await mod.default(blocks[i]);
-              } else {
-                await mod.decorateOld(blocks[i]);
-              }
+              const blockName = block.dataset.blockName;
+              const mod = await import(`/test/fixtures/blocks/${blockName}/${blockName}${i === 1 ? '-old' : ''}.js`);
+              await mod.default(block);
 
               const blockEnd = performance.now();
               const blockElapsed = blockEnd - blockStart;
@@ -91,8 +87,10 @@
 
             await Promise.all(blockPromises);
           }
-          console.log(`Faintly blocks took ${faintlyTime}ms; ${faintlyTime / faintlyBlocks.length}ms per block`);
-          console.log(`Traditional blocks took ${traditionallyTime}ms; ${traditionallyTime / traditionallyBlocks.length}ms per block`);
+          //console.log(`Faintly blocks took ${faintlyTime}ms; ${faintlyTime / faintlyBlocks.length}ms per block`);
+          //console.log(`Traditional blocks took ${traditionallyTime}ms; ${traditionallyTime / traditionallyBlocks.length}ms per block`);
+          const ratio = faintlyTime / traditionallyTime;
+          expect(ratio).to.be.lessThan(1.3);
         });
       });
     });
