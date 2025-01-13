@@ -8,13 +8,30 @@ import { compareDom, compareDomInline } from '../../test-utils.js';
 const { processContent } = exportForTesting;
 
 describe('processContent', () => {
+  it('returns false when children the directive is absent', async () => {
+    const el = document.createElement('div');
+    el.textContent = 'Some text';
+    const result = await processContent(el);
+    expect(result).to.equal(false);
+  });
+
+  it('removes children when context value is undefined', async () => {
+    const el = document.createElement('div');
+    el.textContent = 'Some text';
+    el.setAttribute('data-fly-content', 'content');
+    const result = await processContent(el);
+    expect(result).to.equal(true);
+    expect(el.textContent).to.equal('');
+  });
+
   it('replaces elements children with text content', async () => {
     const el = document.createElement('div');
     el.textContent = 'Some text';
     el.setAttribute('data-fly-content', 'content');
-    await processContent(el, {
+    const result = await processContent(el, {
       content: 'Some other text',
     });
+    expect(result).to.equal(true);
     expect(el.textContent).to.equal('Some other text');
   });
 

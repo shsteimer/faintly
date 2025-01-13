@@ -9,14 +9,21 @@ const { processTest } = exportForTesting;
 describe('processTest', () => {
   describe('data-fly-test', () => {
     it('return true or false based on resolved value', async () => {
+      const parent = document.createElement('div');
+
       const el = document.createElement('div');
+      parent.appendChild(el);
       el.setAttribute('data-fly-test', 'includeDiv');
       const result = await processTest(el, { includeDiv: true });
       expect(result).to.equal(true);
+      expect(el.parentNode).to.equal(parent);
 
-      el.setAttribute('data-fly-test', 'includeDiv');
-      const result2 = await processTest(el, { includeDiv: false });
+      const el2 = document.createElement('div');
+      parent.appendChild(el2);
+      el2.setAttribute('data-fly-test', 'includeDiv');
+      const result2 = await processTest(el2, { includeDiv: false });
       expect(result2).to.equal(false);
+      expect(el2.parentNode).to.equal(null);
     });
 
     it('stores result in context for re-use', async () => {
@@ -65,14 +72,21 @@ describe('processTest', () => {
 
   describe('data-fly-not', () => {
     it('return true or false based on resolved value', async () => {
+      const parent = document.createElement('div');
+
       const el = document.createElement('div');
+      parent.appendChild(el);
       el.setAttribute('data-fly-not', 'includeDiv');
       const result = await processTest(el, { includeDiv: true });
       expect(result).to.equal(false);
+      expect(el.parentNode).to.equal(null);
 
-      el.setAttribute('data-fly-not', 'includeDiv');
-      const result2 = await processTest(el, { includeDiv: false });
+      const el2 = document.createElement('div');
+      parent.appendChild(el2);
+      el2.setAttribute('data-fly-not', 'includeDiv');
+      const result2 = await processTest(el2, { includeDiv: false });
       expect(result2).to.equal(true);
+      expect(el2.parentNode).to.equal(parent);
     });
 
     it('stores result in context for re-use', async () => {

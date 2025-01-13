@@ -3,48 +3,85 @@
 
 import { expect } from '@esm-bundle/chai';
 import { exportForTesting } from '../../../src/faintly.js';
+import { compareDomInline } from '../../test-utils.js';
 
-const { processUnwrap } = exportForTesting;
+const { processUnwraps, resolveUnwrap } = exportForTesting;
 
-describe('processUnwrap', () => {
-  it('return true or false based on resolved value', async () => {
+describe('resolveUnwrap', () => {
+  it('unwraps all the unwrap elements', async () => {
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <div data-fly-unwrap>
+        <span>hello</span>
+        <p>some text <strong data-fly-unwrap>not-bold</strong></p>
+        <div>
+          <div data-fly-unwrap>
+            woooo
+            <div>one</div>
+            <p>two</p>
+            <div data-fly-unwrap>three</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    processUnwraps(div);
+
+    await compareDomInline(div, `
+      <span>hello</span>
+        <p>some text not-bold</p>
+        <div>
+          woooo
+          <div>one</div>
+          <p>two</p>
+          three
+        </div>
+    `);
+  });
+});
+
+describe('resolveUnwrap', () => {
+  it('keeps the unwrap directive when it resolves to true', async () => {
     const el = document.createElement('div');
     el.setAttribute('data-fly-unwrap', 'includeDiv');
-    const result = await processUnwrap(el, { includeDiv: true });
-    expect(result).to.equal(true);
-
-    el.setAttribute('data-fly-unwrap', 'includeDiv');
-    const result2 = await processUnwrap(el, { includeDiv: false });
-    expect(result2).to.equal(false);
-
-    el.setAttribute('data-fly-unwrap', '');
-    const result3 = await processUnwrap(el, {});
-    expect(result3).to.equal(true, 'unwrap with no expression should always be true');
+    await resolveUnwrap(el, { includeDiv: true });
+    expect(el.hasAttribute('data-fly-unwrap')).to.equal(true);
   });
 
-  it('always returns a boolean', async () => {
+  it('removes the unwrap directive when it resolves to false', async () => {
     const el = document.createElement('div');
     el.setAttribute('data-fly-unwrap', 'includeDiv');
-    const stringResult = await processUnwrap(el.cloneNode(true), { includeDiv: 'any value' });
-    expect(stringResult).to.equal(true);
-
-    const emptyStringResult = await processUnwrap(el.cloneNode(true), { includeDiv: '' });
-    expect(emptyStringResult).to.equal(false);
-
-    const undefinedResult = await processUnwrap(el.cloneNode(true), { includeDiv: undefined });
-    expect(undefinedResult).to.equal(false);
-
-    const intResult = await processUnwrap(el.cloneNode(true), { includeDiv: 42 });
-    expect(intResult).to.equal(true);
-
-    const zeroResult = await processUnwrap(el.cloneNode(true), { includeDiv: 0 });
-    expect(zeroResult).to.equal(false);
-  });
-
-  it('removes unwrap directive when complete', async () => {
-    const el = document.createElement('div');
-    el.setAttribute('data-fly-unwrap', '');
-    await processUnwrap(el);
+    await resolveUnwrap(el, { includeDiv: false });
     expect(el.hasAttribute('data-fly-unwrap')).to.equal(false);
+  });
+
+  it('keeps the unwrap directive when it has no expression', async () => {
+    const el = document.createElement('div');
+    el.setAttribute('data-fly-unwrap', '');
+    await resolveUnwrap(el, {});
+    expect(el.hasAttribute('data-fly-unwrap')).to.equal(true);
+  });
+
+  it('works with non boolean values', async () => {
+    const stringEl = document.createElement('div');
+    stringEl.setAttribute('data-fly-unwrap', 'includeDiv');
+    await resolveUnwrap(stringEl.cloneNode(true), { includeDiv: 'any value' });
+    expect(stringEl.hasAttribute('data-fly-unwrap')).to.equal(true);
+
+    await resolveUnwrap(stringEl, { includeDiv: '' });
+    expect(stringEl.hasAttribute('data-fly-unwrap')).to.equal(false);
+
+    const undefEl = document.createElement('div');
+    undefEl.setAttribute('data-fly-unwrap', 'includeDiv');
+    await resolveUnwrap(undefEl, { includeDiv: undefined });
+    expect(undefEl.hasAttribute('data-fly-unwrap')).to.equal(false);
+
+    const numEl = document.createElement('div');
+    numEl.setAttribute('data-fly-unwrap', 'includeDiv');
+    await resolveUnwrap(numEl, { includeDiv: 42 });
+    expect(numEl.hasAttribute('data-fly-unwrap')).to.equal(true);
+
+    await resolveUnwrap(numEl, { includeDiv: 0 });
+    expect(numEl.hasAttribute('data-fly-unwrap')).to.equal(false);
   });
 });
