@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Performance Block Tests</title>
+  <script src="/test/fixtures/scripts/aem.js" type="module"></script>
+  <script src="/test/fixtures/scripts/scripts.js" type="module"></script>
+</head>
+
+<body>
+  <header></header>
+  <main>
+    <div class="faintly-rendered"></div>
+    <div class="traditionally-rendered"></div>
+  </main>
+  <footer></footer>
+  <script type="module">
+    /* eslint-env mocha */
+    import { runTests } from '@web/test-runner-mocha';
+    import { expect } from '@esm-bundle/chai';
+
+    const sampleBlocks = {
+      cards: '',
+      accordion: '',
+      'article-feed': '',
+    };
+
+    async function setupDom() {
+      const sampleBlockNames = Object.keys(sampleBlocks);
+
+      const p = ['.faintly-rendered', '.traditionally-rendered'].map(async (selector) => {
+        const container = document.querySelector(selector);
+        for (let i = 0; i < 100; i++) {
+          const blockToAdd = sampleBlockNames[i % sampleBlockNames.length];
+
+          const resp = await fetch(`/test/sample-blocks/${blockToAdd}.test.html`);
+          const blockHtml = await resp.text();
+
+          const dp = new DOMParser();
+          const blockDoc = dp.parseFromString(blockHtml, 'text/html');
+
+          const block = blockDoc.querySelector(`.${blockToAdd}`);
+          block.dataset.blockName = blockToAdd;
+          container.append(block);
+        }
+      });
+
+      await Promise.all(p);
+    }
+
+    runTests(() => {
+      describe('performance tests', () => {
+        it('compares performance of faintly vs. traditional block rendering', async () => {
+          await new Promise((resolve) => {
+            setTimeout(resolve, 1000);
+          });
+          await setupDom();
+
+          let faintlyTime = 0;
+          const faintlyBlocks = document.querySelectorAll('.faintly-rendered > div');
+          const traditionallyBlocks = document.querySelectorAll('.traditionally-rendered > div');
+          let traditionallyTime = 0;
+
+          expect(faintlyBlocks.length).to.equal(traditionallyBlocks.length);
+
+          for (let i = 0; i < faintlyBlocks.length; i++) {
+            const blockStart = performance.now();
+            const block = faintlyBlocks[i];
+            const mod = await import(`/test/fixtures/blocks/${block.dataset.blockName}/${block.dataset.blockName}.js`);
+            await mod.default(block);
+            const blockEnd = performance.now();
+            const blockElapsed = blockEnd - blockStart;
+            faintlyTime += blockElapsed;
+            // console.log(`Faintly block took ${blockElapsed}ms`);
+
+            const tradblockStart = performance.now();
+            const tradblock = traditionallyBlocks[i];
+            const tradmod = await import(`/test/fixtures/blocks/${tradblock.dataset.blockName}/${tradblock.dataset.blockName}.js`);
+            await tradmod.decorateOld(tradblock);
+            const tradblockEnd = performance.now();
+            const tradblockElapsed = tradblockEnd - tradblockStart;
+            traditionallyTime += tradblockElapsed;
+            // console.log(`Traditional block took ${tradblockElapsed}ms`);
+          }
+          console.log(`Faintly blocks took ${faintlyTime}ms; ${faintlyTime / faintlyBlocks.length}ms per block`);
+          console.log(`Traditional blocks took ${traditionallyTime}ms; ${traditionallyTime / traditionallyBlocks.length}ms per block`);
+
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

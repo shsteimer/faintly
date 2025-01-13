@@ -4,9 +4,10 @@
   "description": "HTML Markup Transformation Library for AEM Blocks",
   "main": "src/faintly.js",
   "scripts": {
-    "test": "web-test-runner --node-resolve --coverage",
-    "test:watch": "web-test-runner --node-resolve --coverage --watch",
-    "test:ci": "web-test-runner --node-resolve",
+    "test": "web-test-runner --node-resolve --coverage --group unit",
+    "test:watch": "web-test-runner --node-resolve --coverage --watch --group unit",
+    "test:perf": "web-test-runner --node-resolve --group perf",
+    "test:perf:watch": "web-test-runner --node-resolve --watch --group perf",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
