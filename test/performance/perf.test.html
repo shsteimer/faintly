@@ -58,39 +58,51 @@
         });
 
         it('compares performance of faintly vs. traditional block rendering', async () => {
-          let faintlyTime = 0;
           const faintlyBlocks = document.querySelectorAll('.faintly-rendered > div');
           const traditionallyBlocks = document.querySelectorAll('.traditionally-rendered > div');
-          let traditionallyTime = 0;
+
 
           expect(faintlyBlocks.length).to.equal(traditionallyBlocks.length);
 
+          let faintlyTime = 0;
+          let faintlyCount = 0;
+          let traditionallyTime = 0;
+          let traditionallyCount = 0;
           for (let i = 0; i < faintlyBlocks.length; i++) {
             const blocks = [faintlyBlocks[i], traditionallyBlocks[i]];
-
             expect(blocks[0].dataset.blockName).to.equal(blocks[1].dataset.blockName);
-            const blockPromises = blocks.map(async (block, i) => {
+
+            const blockPromises = blocks.map(async (block) => {
+              const isFaintly = block.parentElement.classList.contains('faintly-rendered');
               const blockStart = performance.now();
               const blockName = block.dataset.blockName;
-              const mod = await import(`/test/fixtures/blocks/${blockName}/${blockName}${i === 1 ? '-old' : ''}.js`);
+              const mod = await import(`/test/fixtures/blocks/${blockName}/${blockName}${isFaintly ? '' : '-old'}.js`);
               await mod.default(block);
 
               const blockEnd = performance.now();
               const blockElapsed = blockEnd - blockStart;
-              if (i === 0) {
+              if (isFaintly) {
                 faintlyTime += blockElapsed;
+                faintlyCount += 1;
               } else {
                 traditionallyTime += blockElapsed;
+                traditionallyCount += 1;
               }
-
             });
 
             await Promise.all(blockPromises);
           }
-          //console.log(`Faintly blocks took ${faintlyTime}ms; ${faintlyTime / faintlyBlocks.length}ms per block`);
-          //console.log(`Traditional blocks took ${traditionallyTime}ms; ${traditionallyTime / traditionallyBlocks.length}ms per block`);
+
+          expect(faintlyCount).to.equal(faintlyBlocks.length);
+          expect(traditionallyCount).to.equal(traditionallyBlocks.length);
+
+          console.log(`Faintly blocks took ${faintlyTime}ms; ${faintlyTime / faintlyBlocks.length}ms per block`);
+          console.log(`Traditional blocks took ${traditionallyTime}ms; ${traditionallyTime / traditionallyBlocks.length}ms per block`);
           const ratio = faintlyTime / traditionallyTime;
-          expect(ratio).to.be.lessThan(1.3);
+          console.log(`Faintly blocks took ${ratio} times as long as traditional blocks`);
+
+          const roundedRatio = Math.round(ratio * 100) / 100;
+          expect(roundedRatio).to.be.at.most(1.3);
         });
       });
     });
