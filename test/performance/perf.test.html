@@ -30,7 +30,7 @@
 
       const p = ['.faintly-rendered', '.traditionally-rendered'].map(async (selector) => {
         const container = document.querySelector(selector);
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 250; i++) {
           const blockToAdd = sampleBlockNames[i % sampleBlockNames.length];
 
           const resp = await fetch(`/test/sample-blocks/${blockToAdd}.test.html`);
@@ -50,12 +50,14 @@
 
     runTests(() => {
       describe('performance tests', () => {
-        it('compares performance of faintly vs. traditional block rendering', async () => {
+        before(async () => {
           await new Promise((resolve) => {
             setTimeout(resolve, 1000);
           });
           await setupDom();
+        });
 
+        it('compares performance of faintly vs. traditional block rendering', async () => {
           let faintlyTime = 0;
           const faintlyBlocks = document.querySelectorAll('.faintly-rendered > div');
           const traditionallyBlocks = document.querySelectorAll('.traditionally-rendered > div');
@@ -64,27 +66,29 @@
           expect(faintlyBlocks.length).to.equal(traditionallyBlocks.length);
 
           for (let i = 0; i < faintlyBlocks.length; i++) {
-            const blockStart = performance.now();
-            const block = faintlyBlocks[i];
-            const mod = await import(`/test/fixtures/blocks/${block.dataset.blockName}/${block.dataset.blockName}.js`);
-            await mod.default(block);
-            const blockEnd = performance.now();
-            const blockElapsed = blockEnd - blockStart;
-            faintlyTime += blockElapsed;
-            // console.log(`Faintly block took ${blockElapsed}ms`);
+            const blocks = [faintlyBlocks[i], traditionallyBlocks[i]];
 
-            const tradblockStart = performance.now();
-            const tradblock = traditionallyBlocks[i];
-            const tradmod = await import(`/test/fixtures/blocks/${tradblock.dataset.blockName}/${tradblock.dataset.blockName}.js`);
-            await tradmod.decorateOld(tradblock);
-            const tradblockEnd = performance.now();
-            const tradblockElapsed = tradblockEnd - tradblockStart;
-            traditionallyTime += tradblockElapsed;
-            // console.log(`Traditional block took ${tradblockElapsed}ms`);
+            expect(blocks[0].dataset.blockName).to.equal(blocks[1].dataset.blockName);
+            const blockPromises = blocks.map(async (block, i) => {
+              const blockStart = performance.now();
+              const blockName = block.dataset.blockName;
+              const mod = await import(`/test/fixtures/blocks/${blockName}/${blockName}${i === 1 ? '-old' : ''}.js`);
+              await mod.default(block);
+
+              const blockEnd = performance.now();
+              const blockElapsed = blockEnd - blockStart;
+              if (i === 0) {
+                faintlyTime += blockElapsed;
+              } else {
+                traditionallyTime += blockElapsed;
+              }
+
+            });
+
+            await Promise.all(blockPromises);
           }
           console.log(`Faintly blocks took ${faintlyTime}ms; ${faintlyTime / faintlyBlocks.length}ms per block`);
           console.log(`Traditional blocks took ${traditionallyTime}ms; ${traditionallyTime / traditionallyBlocks.length}ms per block`);
-
         });
       });
     });
