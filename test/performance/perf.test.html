@@ -30,7 +30,7 @@
 
       const p = ['.faintly-rendered', '.traditionally-rendered'].map(async (selector) => {
         const container = document.querySelector(selector);
-        for (let i = 0; i < 250; i++) {
+        for (let i = 0; i < 100; i++) {
           const blockToAdd = sampleBlockNames[i % sampleBlockNames.length];
 
           const resp = await fetch(`/test/sample-blocks/${blockToAdd}.test.html`);
@@ -75,7 +75,7 @@
 
             const tradblockStart = performance.now();
             const tradblock = traditionallyBlocks[i];
-            const tradmod = await import(`/test/fixtures/blocks/${block.dataset.blockName}/${block.dataset.blockName}.js`);
+            const tradmod = await import(`/test/fixtures/blocks/${tradblock.dataset.blockName}/${tradblock.dataset.blockName}.js`);
             await tradmod.decorateOld(tradblock);
             const tradblockEnd = performance.now();
             const tradblockElapsed = tradblockEnd - tradblockStart;
