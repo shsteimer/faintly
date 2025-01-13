@@ -231,6 +231,8 @@ async function processContent(el, context) {
       const textNode = document.createTextNode(content);
       el.replaceChildren(textNode);
     }
+  } else {
+    el.textContent = '';
   }
 
   return true;

@@ -7,14 +7,22 @@ import { compareDom } from '../../test-utils.js';
 const { processInclude } = exportForTesting;
 
 describe('processInclude', () => {
+  it('returns false when the directive is absent', async () => {
+    const el = document.createElement('div');
+    el.textContent = 'Some text';
+    const result = await processInclude(el);
+    expect(result).to.equal(false);
+  });
+
   it('replaces elements from a template by name', async () => {
     const el = document.createElement('div');
     el.setAttribute('data-fly-include', 'static-alt');
-    await processInclude(el, {
+    const result = await processInclude(el, {
       template: {
         path: '/test/fixtures/blocks/static-block/static-block.html',
       },
     });
+    expect(result).to.equal(true);
     await compareDom(el, 'templates/static-block-alt');
   });
 

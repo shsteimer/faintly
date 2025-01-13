@@ -66,7 +66,21 @@ describe('resolveTemplates', () => {
       });
       expect.fail('exception not thrown');
     } catch (e) {
-      expect(e.message.startsWith('Failed to fetch template'), e.message).to.be.true;
+      expect(e.message).to.be.a('string').and.matches(/^Failed to fetch template/);
+    }
+  });
+
+  it('throws an error if template is not found', async () => {
+    try {
+      await resolveTemplate({
+        template: {
+          path: '/test/fixtures/blocks/static-block/custom-template.html',
+          name: 'dne',
+        },
+      });
+      expect.fail('exception not thrown');
+    } catch (e) {
+      expect(e.message).to.be.a('string').and.matches(/^Failed to find template/);
     }
   });
 });
