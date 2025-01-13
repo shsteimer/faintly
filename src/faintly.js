@@ -211,9 +211,10 @@ function processUnwraps(el) {
  *
  * @param {Element} el the element to process
  * @param {Object} context the rendering context
+ * @returns {Promise<Boolean>} if there was a content directive
  */
 async function processContent(el, context) {
-  if (!el.hasAttribute('data-fly-content')) return;
+  if (!el.hasAttribute('data-fly-content')) return false;
 
   const contentExpression = el.getAttribute('data-fly-content');
   const content = await resolveExpression(contentExpression, context);
@@ -231,6 +232,8 @@ async function processContent(el, context) {
       el.replaceChildren(textNode);
     }
   }
+
+  return true;
 }
 
 /**
@@ -238,11 +241,12 @@ async function processContent(el, context) {
  *
  * @param {Element} el the element to potentially be repeated
  * @param {Object} context the rendering context
- * @returns {Promise<Boolean>} if the node is repeated or not
+ * @returns {Promise<Number>}
+ * the net number of nodes added/removed as a result of the repeat directive
  */
 async function processRepeat(el, context) {
   const repeatAttrName = el.getAttributeNames().find((attrName) => attrName.startsWith('data-fly-repeat'));
-  if (!repeatAttrName) return false;
+  if (!repeatAttrName) return -42;
 
   const nameParts = repeatAttrName.split('.');
   const contextName = nameParts[1] || 'item';
@@ -251,7 +255,7 @@ async function processRepeat(el, context) {
   const arr = await resolveExpression(repeatExpression, context);
   if (!arr || Object.keys(arr).length === 0) {
     el.remove();
-    return false;
+    return -1;
   }
 
   let i = 0;
@@ -272,12 +276,12 @@ async function processRepeat(el, context) {
 
     // eslint-disable-next-line no-use-before-define, no-await-in-loop
     await processNode(cloned, repeatContext);
-    cloned.setAttribute('data-fly-ignore', '');
     i += 1;
   }
 
   el.remove();
-  return true;
+
+  return i - 1;
 }
 
 /**
@@ -285,9 +289,10 @@ async function processRepeat(el, context) {
  *
  * @param {Element} el the element to process
  * @param {Object} context the rendering context
+ * @returns {Promise<Boolean>} if there was a include directive
  */
 async function processInclude(el, context) {
-  if (!el.hasAttribute('data-fly-include')) return;
+  if (!el.hasAttribute('data-fly-include')) return false;
 
   const includeValue = el.getAttribute('data-fly-include');
   el.removeAttribute('data-fly-include');
@@ -311,7 +316,8 @@ async function processInclude(el, context) {
 
   // eslint-disable-next-line no-use-before-define
   await renderElement(el, includeContext);
-  el.setAttribute('data-fly-ignore-children', '');
+
+  return true;
 }
 
 /**
@@ -319,46 +325,39 @@ async function processInclude(el, context) {
  *
  * @param {Node} node the node to render
  * @param {Object} context the rendering context
- * @returns {Promise<void>} a promise that resolves when the node has been rendered
+ * @returns {Promise<Number>} a promise that resolves when the node has been rendered
  */
 async function processNode(node, context) {
   context.currentNode = node;
+  let processChildren = [Node.ELEMENT_NODE, Node.DOCUMENT_FRAGMENT_NODE].includes(node.nodeType);
   if (node.nodeType === Node.ELEMENT_NODE) {
-    if (node.hasAttribute('data-fly-ignore')) {
-      node.removeAttribute('data-fly-ignore');
-      return false;
-    }
-
     const shouldRender = await processTest(node, context);
-    if (!shouldRender) return true;
+    if (!shouldRender) return -1;
 
-    const repeated = await processRepeat(node, context);
-    if (repeated) return true;
+    const repeatedCount = await processRepeat(node, context);
+    if (repeatedCount !== -42) return repeatedCount;
 
     await processAttributes(node, context);
 
-    await processContent(node, context);
-    await processInclude(node, context);
+    processChildren = (await processContent(node, context))
+      || (await processInclude(node, context)) || true;
 
     await resolveUnwrap(node, context);
   } else if (node.nodeType === Node.TEXT_NODE) {
     await processTextExpressions(node, context);
   }
 
-  if (node.nodeType === Node.ELEMENT_NODE && node.hasAttribute('data-fly-ignore-children')) {
-    node.removeAttribute('data-fly-ignore-children');
-    return false;
-  }
+  if (!processChildren) return 0;
 
   // eslint-disable-next-line no-restricted-syntax
   for (let i = 0; i < node.childNodes.length; i += 1) {
     const child = node.childNodes[i];
     // eslint-disable-next-line no-await-in-loop
-    const wasRemoved = await processNode(child, context);
-    if (wasRemoved) i -= 1;
+    const resultingNodeCount = await processNode(child, context);
+    i += resultingNodeCount;
   }
 
-  return false;
+  return 0;
 }
 
 /**

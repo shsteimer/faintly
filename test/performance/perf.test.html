@@ -17,6 +17,7 @@
   <script type="module">
     /* eslint-env mocha */
     import { runTests } from '@web/test-runner-mocha';
+    import { expect } from '@esm-bundle/chai';
 
     const sampleBlocks = {
       cards: '',
@@ -29,7 +30,7 @@
 
       const p = ['.faintly-rendered', '.traditionally-rendered'].map(async (selector) => {
         const container = document.querySelector(selector);
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 250; i++) {
           const blockToAdd = sampleBlockNames[i % sampleBlockNames.length];
 
           const resp = await fetch(`/test/sample-blocks/${blockToAdd}.test.html`);
@@ -57,6 +58,11 @@
 
           let faintlyTime = 0;
           const faintlyBlocks = document.querySelectorAll('.faintly-rendered > div');
+          const traditionallyBlocks = document.querySelectorAll('.traditionally-rendered > div');
+          let traditionallyTime = 0;
+
+          expect(faintlyBlocks.length).to.equal(traditionallyBlocks.length);
+
           for (let i = 0; i < faintlyBlocks.length; i++) {
             const blockStart = performance.now();
             const block = faintlyBlocks[i];
@@ -66,22 +72,19 @@
             const blockElapsed = blockEnd - blockStart;
             faintlyTime += blockElapsed;
             // console.log(`Faintly block took ${blockElapsed}ms`);
+
+            const tradblockStart = performance.now();
+            const tradblock = traditionallyBlocks[i];
+            const tradmod = await import(`/test/fixtures/blocks/${block.dataset.blockName}/${block.dataset.blockName}.js`);
+            await tradmod.decorateOld(tradblock);
+            const tradblockEnd = performance.now();
+            const tradblockElapsed = tradblockEnd - tradblockStart;
+            traditionallyTime += tradblockElapsed;
+            // console.log(`Traditional block took ${tradblockElapsed}ms`);
           }
           console.log(`Faintly blocks took ${faintlyTime}ms; ${faintlyTime / faintlyBlocks.length}ms per block`);
-
-          const traditionallyBlocks = document.querySelectorAll('.traditionally-rendered > div');
-          let traditionallyTime = 0;
-          for (let i = 0; i < traditionallyBlocks.length; i++) {
-            const blockStart = performance.now();
-            const block = traditionallyBlocks[i];
-            const mod = await import(`/test/fixtures/blocks/${block.dataset.blockName}/${block.dataset.blockName}.js`);
-            await mod.decorateOld(block);
-            const blockEnd = performance.now();
-            const blockElapsed = blockEnd - blockStart;
-            traditionallyTime += blockElapsed;
-            // console.log(`Traditional block took ${blockElapsed}ms`);
-          }
           console.log(`Traditional blocks took ${traditionallyTime}ms; ${traditionallyTime / traditionallyBlocks.length}ms per block`);
+          
         });
       });
     });

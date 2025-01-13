@@ -18,7 +18,7 @@ describe('processRepeat', () => {
     const repeated = await processRepeat(el, {
       array: ['bob', 'alice', 'charlie'],
     });
-    expect(repeated).to.equal(true);
+    expect(repeated).to.equal(2);
     expect(parent.children[0].textContent).to.equal('Hello, bob!');
     expect(parent.children[1].textContent).to.equal('Hello, alice!');
     expect(parent.children[2].textContent).to.equal('Hello, charlie!');
@@ -35,7 +35,7 @@ describe('processRepeat', () => {
     const repeated = await processRepeat(el, {
       array: ['bob', 'alice', 'charlie'],
     });
-    expect(repeated).to.equal(true);
+    expect(repeated).to.equal(2);
     expect(parent.children[0].textContent).to.equal('Hello, bob!');
     expect(parent.children[1].textContent).to.equal('Hello, alice!');
     expect(parent.children[2].textContent).to.equal('Hello, charlie!');
@@ -56,7 +56,7 @@ describe('processRepeat', () => {
         Charlie: 'Brown',
       },
     });
-    expect(repeated).to.equal(true);
+    expect(repeated).to.equal(2);
     expect(parent.children[0].textContent).to.equal('Hello, Bob Lee, you are contestent 1. Ref: 0');
     expect(parent.children[1].textContent).to.equal('Hello, Alice Smith, you are contestent 2. Ref: 1');
     expect(parent.children[2].textContent).to.equal('Hello, Charlie Brown, you are contestent 3. Ref: 2');
