@@ -254,9 +254,9 @@ async function processRepeat(el, context) {
     return true;
   }
 
+  el.removeAttribute(repeatAttrName);
   const repeatedNodes = await Promise.all(Object.entries(arr).map(async ([key, item], i) => {
     const cloned = el.cloneNode(true);
-    cloned.removeAttribute(repeatAttrName);
 
     const repeatContext = { ...context };
     repeatContext[contextName.toLowerCase()] = item;
