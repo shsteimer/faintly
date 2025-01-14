@@ -7,6 +7,13 @@ import { exportForTesting } from '../../../src/faintly.js';
 const { processRepeat } = exportForTesting;
 
 describe('processRepeat', () => {
+  it('returns false when repeat the directive is absent', async () => {
+    const el = document.createElement('div');
+    el.textContent = 'Some text';
+    const result = await processRepeat(el);
+    expect(result).to.be.false;
+  });
+
   it('repeats the node over a collection', async () => {
     const el = document.createElement('div');
     el.setAttribute('data-fly-repeat', 'array');
@@ -18,7 +25,7 @@ describe('processRepeat', () => {
     const repeated = await processRepeat(el, {
       array: ['bob', 'alice', 'charlie'],
     });
-    expect(repeated).to.equal(2);
+    expect(repeated).to.be.true;
     expect(el.parentNode).to.equal(null);
     expect(parent.children[0].textContent).to.equal('Hello, bob!');
     expect(parent.children[1].textContent).to.equal('Hello, alice!');
@@ -36,7 +43,7 @@ describe('processRepeat', () => {
     const repeated = await processRepeat(el, {
       array: [],
     });
-    expect(repeated).to.equal(-1);
+    expect(repeated).to.be.true;
     expect(parent.children.length).to.equal(0);
   });
 
@@ -51,7 +58,7 @@ describe('processRepeat', () => {
     const repeated = await processRepeat(el, {
       array: ['bob', 'alice', 'charlie'],
     });
-    expect(repeated).to.equal(2);
+    expect(repeated).to.be.true;
     expect(parent.children[0].textContent).to.equal('Hello, bob!');
     expect(parent.children[1].textContent).to.equal('Hello, alice!');
     expect(parent.children[2].textContent).to.equal('Hello, charlie!');
@@ -72,7 +79,7 @@ describe('processRepeat', () => {
         Charlie: 'Brown',
       },
     });
-    expect(repeated).to.equal(2);
+    expect(repeated).to.be.true;
     expect(parent.children[0].textContent).to.equal('Hello, Bob Lee, you are contestent 1. Ref: 0');
     expect(parent.children[1].textContent).to.equal('Hello, Alice Smith, you are contestent 2. Ref: 1');
     expect(parent.children[2].textContent).to.equal('Hello, Charlie Brown, you are contestent 3. Ref: 2');

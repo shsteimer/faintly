@@ -12,9 +12,7 @@ async function resolveTemplate(context) {
   let template = document.getElementById(templateId);
   if (!template) {
     const resp = await fetch(context.template.path);
-    if (!resp.ok) {
-      throw new Error(`Failed to fetch template from ${context.template.path} for block ${context.blockName}.`);
-    }
+    if (!resp.ok) throw new Error(`Failed to fetch template from ${context.template.path} for block ${context.blockName}.`);
 
     const markup = await resp.text();
 
@@ -30,9 +28,7 @@ async function resolveTemplate(context) {
   }
 
   template = document.getElementById(templateId);
-  if (!template) {
-    throw new Error(`Failed to find template with id ${templateId}.`);
-  }
+  if (!template) throw new Error(`Failed to find template with id ${templateId}.`);
 
   return template;
 }
@@ -108,9 +104,7 @@ async function resolveExpressions(str, context) {
 async function processTextExpressions(node, context) {
   const { updated, updatedText } = await resolveExpressions(node.textContent, context);
 
-  if (updated) {
-    node.textContent = updatedText;
-  }
+  if (updated) node.textContent = updatedText;
 }
 
 async function processAttributesDirective(el, context) {
@@ -243,12 +237,12 @@ async function processContent(el, context) {
  *
  * @param {Element} el the element to potentially be repeated
  * @param {Object} context the rendering context
- * @returns {Promise<Number>}
+ * @returns {Promise<Boolean>} if the node was repeated
  * the net number of nodes added/removed as a result of the repeat directive
  */
 async function processRepeat(el, context) {
   const repeatAttrName = el.getAttributeNames().find((attrName) => attrName.startsWith('data-fly-repeat'));
-  if (!repeatAttrName) return -42;
+  if (!repeatAttrName) return false;
 
   const nameParts = repeatAttrName.split('.');
   const contextName = nameParts[1] || 'item';
@@ -257,15 +251,12 @@ async function processRepeat(el, context) {
   const arr = await resolveExpression(repeatExpression, context);
   if (!arr || Object.keys(arr).length === 0) {
     el.remove();
-    return -1;
+    return true;
   }
 
-  let i = 0;
-  let afterEL = el;
-  // eslint-disable-next-line no-restricted-syntax
-  for (const [key, item] of Object.entries(arr)) {
+  el.removeAttribute(repeatAttrName);
+  const repeatedNodes = await Promise.all(Object.entries(arr).map(async ([key, item], i) => {
     const cloned = el.cloneNode(true);
-    cloned.removeAttribute(repeatAttrName);
 
     const repeatContext = { ...context };
     repeatContext[contextName.toLowerCase()] = item;
@@ -273,17 +264,21 @@ async function processRepeat(el, context) {
     repeatContext[`${contextName.toLowerCase()}Number`] = i + 1;
     repeatContext[`${contextName.toLowerCase()}Key`] = key;
 
-    afterEL.after(cloned);
-    afterEL = cloned;
-
-    // eslint-disable-next-line no-use-before-define, no-await-in-loop
+    // eslint-disable-next-line no-use-before-define
     await processNode(cloned, repeatContext);
-    i += 1;
-  }
+
+    return cloned;
+  }));
+
+  let afterEL = el;
+  repeatedNodes.forEach((node) => {
+    afterEL.after(node);
+    afterEL = node;
+  });
 
   el.remove();
 
-  return i - 1;
+  return true;
 }
 
 /**
@@ -327,17 +322,17 @@ async function processInclude(el, context) {
  *
  * @param {Node} node the node to render
  * @param {Object} context the rendering context
- * @returns {Promise<Number>} a promise that resolves when the node has been rendered
+ * @returns {Promise<void>} a promise that resolves when the node has been rendered
  */
 async function processNode(node, context) {
   context.currentNode = node;
   let processChildren = [Node.ELEMENT_NODE, Node.DOCUMENT_FRAGMENT_NODE].includes(node.nodeType);
   if (node.nodeType === Node.ELEMENT_NODE) {
     const shouldRender = await processTest(node, context);
-    if (!shouldRender) return -1;
+    if (!shouldRender) return;
 
-    const repeatedCount = await processRepeat(node, context);
-    if (repeatedCount !== -42) return repeatedCount;
+    const repeated = await processRepeat(node, context);
+    if (repeated) return;
 
     await processAttributes(node, context);
 
@@ -349,17 +344,13 @@ async function processNode(node, context) {
     await processTextExpressions(node, context);
   }
 
-  if (!processChildren) return 0;
+  const children = !processChildren ? [] : [...node.childNodes];
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (let i = 0; i < node.childNodes.length; i += 1) {
-    const child = node.childNodes[i];
+  for (let i = 0; i < children.length; i += 1) {
+    const child = children[i];
     // eslint-disable-next-line no-await-in-loop
-    const resultingNodeCount = await processNode(child, context);
-    i += resultingNodeCount;
+    await processNode(child, context);
   }
-
-  return 0;
 }
 
 /**
