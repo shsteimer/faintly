@@ -12,9 +12,7 @@ async function resolveTemplate(context) {
   let template = document.getElementById(templateId);
   if (!template) {
     const resp = await fetch(context.template.path);
-    if (!resp.ok) {
-      throw new Error(`Failed to fetch template from ${context.template.path} for block ${context.blockName}.`);
-    }
+    if (!resp.ok) throw new Error(`Failed to fetch template from ${context.template.path} for block ${context.blockName}.`);
 
     const markup = await resp.text();
 
@@ -30,9 +28,7 @@ async function resolveTemplate(context) {
   }
 
   template = document.getElementById(templateId);
-  if (!template) {
-    throw new Error(`Failed to find template with id ${templateId}.`);
-  }
+  if (!template) throw new Error(`Failed to find template with id ${templateId}.`);
 
   return template;
 }
@@ -108,9 +104,7 @@ async function resolveExpressions(str, context) {
 async function processTextExpressions(node, context) {
   const { updated, updatedText } = await resolveExpressions(node.textContent, context);
 
-  if (updated) {
-    node.textContent = updatedText;
-  }
+  if (updated) node.textContent = updatedText;
 }
 
 async function processAttributesDirective(el, context) {
@@ -260,9 +254,6 @@ async function processRepeat(el, context) {
     return true;
   }
 
-  let afterEL = el;
-
-  // eslint-disable-next-line no-restricted-syntax
   const repeatedNodes = await Promise.all(Object.entries(arr).map(async ([key, item], i) => {
     const cloned = el.cloneNode(true);
     cloned.removeAttribute(repeatAttrName);
@@ -279,6 +270,7 @@ async function processRepeat(el, context) {
     return cloned;
   }));
 
+  let afterEL = el;
   repeatedNodes.forEach((node) => {
     afterEL.after(node);
     afterEL = node;
