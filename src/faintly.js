@@ -260,7 +260,6 @@ async function processRepeat(el, context) {
     return true;
   }
 
-  let i = 0;
   let afterEL = el;
 
   // eslint-disable-next-line no-restricted-syntax
@@ -274,7 +273,7 @@ async function processRepeat(el, context) {
     repeatContext[`${contextName.toLowerCase()}Number`] = i + 1;
     repeatContext[`${contextName.toLowerCase()}Key`] = key;
 
-    // eslint-disable-next-line no-use-before-define, no-await-in-loop
+    // eslint-disable-next-line no-use-before-define
     await processNode(cloned, repeatContext);
 
     return cloned;
@@ -284,23 +283,6 @@ async function processRepeat(el, context) {
     afterEL.after(node);
     afterEL = node;
   });
-  // for (const [key, item] of Object.entries(arr)) {
-  //   const cloned = el.cloneNode(true);
-  //   cloned.removeAttribute(repeatAttrName);
-
-  //   const repeatContext = { ...context };
-  //   repeatContext[contextName.toLowerCase()] = item;
-  //   repeatContext[`${contextName.toLowerCase()}Index`] = i;
-  //   repeatContext[`${contextName.toLowerCase()}Number`] = i + 1;
-  //   repeatContext[`${contextName.toLowerCase()}Key`] = key;
-
-  //   afterEL.after(cloned);
-  //   afterEL = cloned;
-
-  //   // eslint-disable-next-line no-use-before-define, no-await-in-loop
-  //   await processNode(cloned, repeatContext);
-  //   i += 1;
-  // }
 
   el.remove();
 
