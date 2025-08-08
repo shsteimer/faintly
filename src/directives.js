@@ -27,7 +27,7 @@ async function processAttributesDirective(el, context) {
  * @param {Object} context the rendering context
  */
 export async function processAttributes(el, context) {
-  processAttributesDirective(el, context);
+  await processAttributesDirective(el, context);
 
   const attrPromises = el.getAttributeNames()
     .filter((attrName) => !attrName.startsWith('data-fly-'))

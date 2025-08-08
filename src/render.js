@@ -75,7 +75,7 @@ export async function renderElementWithTemplate(el, template, context) {
 /**
  * Transform an element using an HTML template
  *
- * @param {Element} block the block element
+ * @param {Element} el the element to render
  * @param {Object} context the rendering context
  */
 export async function renderElement(el, context) {

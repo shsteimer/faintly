@@ -34,7 +34,7 @@ export async function resolveExpression(expression, context) {
  * @param {Object} context the rendering context
  */
 export async function resolveExpressions(str, context) {
-  const regexp = /(\\)?\${([a-z0-9\\.\s]+)}/dgi;
+  const regexp = /(\\)?\${([a-z0-9\\.\s]+)}/gi;
 
   const promises = [];
   str.replaceAll(regexp, (match, escapeChar, expression) => {

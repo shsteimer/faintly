@@ -39,7 +39,7 @@ async function resolveExpression(expression, context) {
   return resolved;
 }
 async function resolveExpressions(str, context) {
-  const regexp = /(\\)?\${([a-z0-9\\.\s]+)}/dgi;
+  const regexp = /(\\)?\${([a-z0-9\\.\s]+)}/gi;
   const promises = [];
   str.replaceAll(regexp, (match, escapeChar, expression) => {
     const replacementPromise = escapeChar ? Promise.resolve(match.slice(1)) : resolveExpression(expression.trim(), context);
@@ -78,7 +78,7 @@ async function processAttributesDirective(el, context) {
   }
 }
 async function processAttributes(el, context) {
-  processAttributesDirective(el, context);
+  await processAttributesDirective(el, context);
   const attrPromises = el.getAttributeNames().filter((attrName) => !attrName.startsWith("data-fly-")).map(async (attrName) => {
     const { updated, updatedText } = await resolveExpressions(el.getAttribute(attrName), context);
     if (updated) el.setAttribute(attrName, updatedText);

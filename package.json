@@ -2,7 +2,7 @@
   "name": "faintly",
   "version": "1.0.0",
   "description": "HTML Markup Transformation Library for AEM Blocks",
-  "main": "src/faintly.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "web-test-runner --node-resolve --coverage --group unit",
     "test:watch": "web-test-runner --node-resolve --coverage --watch --group unit",

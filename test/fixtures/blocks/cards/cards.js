@@ -1,5 +1,5 @@
 import { createOptimizedPicture } from '../../scripts/aem.js';
-import { renderBlock } from '../../../../src/render.js';
+import { renderBlock } from '../../../../src/index.js';
 
 function transformCardColumn(context) {
   const col = context.card;

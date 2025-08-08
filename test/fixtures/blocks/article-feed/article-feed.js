@@ -1,4 +1,4 @@
-import { renderBlock } from '../../../../src/render.js';
+import { renderBlock } from '../../../../src/index.js';
 
 async function fetchArticles() {
   const response = await fetch(`${window.hlx.codeBasePath}/blocks/article-feed/articles.json`);
