@@ -3,9 +3,7 @@
 /* eslint-disable no-unused-expressions */
 
 import { expect } from '@esm-bundle/chai';
-import { exportForTesting } from '../../src/faintly.js';
-
-const { resolveExpressions } = exportForTesting;
+import { resolveExpressions } from '../../src/expressions.js';
 
 describe('resolveExpressions', () => {
   it('resolves multiple expressions in a string', async () => {

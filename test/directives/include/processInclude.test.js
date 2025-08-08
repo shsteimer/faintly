@@ -1,10 +1,8 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 import { expect } from '@esm-bundle/chai';
-import { exportForTesting } from '../../../src/faintly.js';
+import { processInclude } from '../../../src/directives.js';
 import { compareDom } from '../../test-utils.js';
-
-const { processInclude } = exportForTesting;
 
 describe('processInclude', () => {
   it('returns false when the directive is absent', async () => {

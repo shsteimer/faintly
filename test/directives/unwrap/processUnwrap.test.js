@@ -2,10 +2,8 @@
 /* eslint-disable no-unused-expressions */
 
 import { expect } from '@esm-bundle/chai';
-import { exportForTesting } from '../../../src/faintly.js';
+import { processUnwraps, resolveUnwrap } from '../../../src/directives.js';
 import { compareDomInline } from '../../test-utils.js';
-
-const { processUnwraps, resolveUnwrap } = exportForTesting;
 
 describe('resolveUnwrap', () => {
   it('unwraps all the unwrap elements', async () => {

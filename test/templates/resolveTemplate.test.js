@@ -2,10 +2,8 @@
 /* eslint-disable no-unused-expressions */
 
 import { expect } from '@esm-bundle/chai';
-import { exportForTesting } from '../../src/faintly.js';
+import resolveTemplate from '../../src/templates.js';
 import { compareDom } from '../test-utils.js';
-
-const { resolveTemplate } = exportForTesting;
 
 describe('resolveTemplates', () => {
   it('loads the default template for a block', async () => {
