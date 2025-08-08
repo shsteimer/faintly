@@ -2,10 +2,8 @@
 /* eslint-disable no-unused-expressions */
 
 import { expect } from '@esm-bundle/chai';
-import { exportForTesting } from '../../../src/faintly.js';
+import { processContent } from '../../../src/directives.js';
 import { compareDom, compareDomInline } from '../../test-utils.js';
-
-const { processContent } = exportForTesting;
 
 describe('processContent', () => {
   it('returns false when children the directive is absent', async () => {

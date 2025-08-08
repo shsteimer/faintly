@@ -2,9 +2,7 @@
 /* eslint-disable no-unused-expressions */
 
 import { expect } from '@esm-bundle/chai';
-import { exportForTesting } from '../../../src/faintly.js';
-
-const { processTest } = exportForTesting;
+import { processTest } from '../../../src/directives.js';
 
 describe('processTest', () => {
   describe('data-fly-test', () => {

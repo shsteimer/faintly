@@ -2,9 +2,7 @@
 /* eslint-disable no-unused-expressions */
 
 import { expect } from '@esm-bundle/chai';
-import { exportForTesting } from '../../src/faintly.js';
-
-const { resolveExpression } = exportForTesting;
+import { resolveExpression } from '../../src/expressions.js';
 
 describe('resolveExpression', () => {
   it('resolves object expressions from the rendering context', async () => {

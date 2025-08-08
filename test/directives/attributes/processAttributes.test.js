@@ -2,9 +2,7 @@
 /* eslint-disable no-unused-expressions */
 
 import { expect } from '@esm-bundle/chai';
-import { exportForTesting } from '../../../src/faintly.js';
-
-const { processAttributes } = exportForTesting;
+import { processAttributes } from '../../../src/directives.js';
 
 describe('processAttributes', () => {
   it('resolves expressions in non data-fly-* attributes', async () => {

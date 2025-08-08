@@ -10,7 +10,7 @@ I've experimented with other existing libraries (ejs templates, etc.) but wanted
 
 ## Getting Started
 
-1. copy the faintly.js file to the scripts directory of your project
+1. copy the /dist/faintly.js file to the scripts directory of your project
 2. in the folder for your block, add a `blockName.html` file for the block template
 3. in your block javascript, call the `renderBlock` function:
 

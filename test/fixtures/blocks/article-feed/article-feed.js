@@ -1,4 +1,4 @@
-import { renderBlock } from '../../../../src/faintly.js';
+import { renderBlock } from '../../../../src/render.js';
 
 async function fetchArticles() {
   const response = await fetch(`${window.hlx.codeBasePath}/blocks/article-feed/articles.json`);

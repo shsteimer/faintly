@@ -2,9 +2,7 @@
 /* eslint-disable no-unused-expressions */
 
 import { expect } from '@esm-bundle/chai';
-import { exportForTesting } from '../../src/faintly.js';
-
-const { processTextExpressions } = exportForTesting;
+import { processTextExpressions } from '../../src/expressions.js';
 
 describe('processTextExpressions', () => {
   it('updates text node content', async () => {

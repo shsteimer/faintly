@@ -2,9 +2,7 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 import { expect } from '@esm-bundle/chai';
-import { exportForTesting } from '../../../src/faintly.js';
-
-const { processRepeat } = exportForTesting;
+import { processRepeat } from '../../../src/directives.js';
 
 describe('processRepeat', () => {
   it('returns false when repeat the directive is absent', async () => {
