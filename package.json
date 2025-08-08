@@ -10,9 +10,7 @@
     "test:perf:watch": "web-test-runner --node-resolve --watch --group perf",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "build:dist": "esbuild src/index.js --bundle --format=esm --platform=browser --outfile=dist/faintly.js",
-    "build:dist:min": "esbuild src/index.js --bundle --format=esm --platform=browser --minify --sourcemap --legal-comments=none --outfile=dist/faintly.min.js",
-    "build": "npm run build:dist && npm run build:dist:min",
+    "build": "esbuild src/index.js --bundle --format=esm --platform=browser --outfile=dist/faintly.js",
     "clean": "rm -rf dist"
   },
   "author": "Sean Steimer",
