@@ -38,12 +38,10 @@ export async function resolveExpressions(str, context) {
 
   const promises = [];
   str.replaceAll(regexp, (match, escapeChar, expression) => {
-    if (escapeChar) {
-      promises.push(Promise.resolve(match.slice(1)));
-    }
-
-    promises.push(resolveExpression(expression.trim(), context));
-
+    const replacementPromise = escapeChar
+      ? Promise.resolve(match.slice(1))
+      : resolveExpression(expression.trim(), context);
+    promises.push(replacementPromise);
     return match;
   });
 

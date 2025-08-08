@@ -25,6 +25,17 @@ describe('resolveExpressions', () => {
     expect(updatedText).to.equal('this is an ${ escaped } value, this one is not something');
   });
 
+  it('does not misalign when an escaped expression is followed by a different unescaped expression', async () => {
+    const { updated, updatedText } = await resolveExpressions('X \\${ keep } and ${ value }', {
+      keep: 'K',
+      value: 'V',
+    });
+    expect(updated).to.equal(true);
+    // The escaped placeholder should remain literal, and the following different expression
+    // should resolve to its own value, not the value of the escaped placeholder.
+    expect(updatedText).to.equal('X ${ keep } and V');
+  });
+
   it('doesnt update normal strings', async () => {
     const { updated, updatedText } = await resolveExpressions('this is an normal string', {});
     expect(updated).to.equal(false);
