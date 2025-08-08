@@ -1,4 +1,5 @@
 // src/templates.js
+var dp = new DOMParser();
 async function resolveTemplate(context) {
   context.template = context.template || {};
   context.template.path = context.template.path || `${context.codeBasePath}/blocks/${context.blockName}/${context.blockName}.html`;
@@ -8,7 +9,6 @@ async function resolveTemplate(context) {
     const resp = await fetch(context.template.path);
     if (!resp.ok) throw new Error(`Failed to fetch template from ${context.template.path} for block ${context.blockName}.`);
     const markup = await resp.text();
-    const dp = new DOMParser();
     const templateDom = dp.parseFromString(markup, "text/html");
     templateDom.querySelectorAll("template").forEach((t) => {
       const name = t.getAttribute("data-fly-name") || "";

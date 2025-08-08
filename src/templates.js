@@ -1,3 +1,5 @@
+const dp = new DOMParser();
+
 /**
  * resolve the template to render
  *
@@ -16,7 +18,6 @@ export default async function resolveTemplate(context) {
 
     const markup = await resp.text();
 
-    const dp = new DOMParser();
     const templateDom = dp.parseFromString(markup, 'text/html');
 
     templateDom.querySelectorAll('template').forEach((t) => {
