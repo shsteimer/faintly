@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "esbuild src/index.js --bundle --format=esm --platform=browser --outfile=dist/faintly.js",
+    "build:watch": "esbuild src/index.js --bundle --format=esm --platform=browser --outfile=dist/faintly.js --watch",
     "clean": "rm -rf dist"
   },
   "author": "Sean Steimer",
