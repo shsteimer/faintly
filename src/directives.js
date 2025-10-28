@@ -105,8 +105,7 @@ export async function processContent(el, context) {
  *
  * @param {Element} el the element to potentially be repeated
  * @param {Object} context the rendering context
- * @returns {Promise<Boolean>} if the node was repeated
- * the net number of nodes added/removed as a result of the repeat directive
+ * @returns {Promise<Boolean>} if there was a repeat directive
  */
 export async function processRepeat(el, context) {
   const repeatAttrName = el.getAttributeNames().find((attrName) => attrName.startsWith('data-fly-repeat'));
@@ -154,7 +153,7 @@ export async function processRepeat(el, context) {
  *
  * @param {Element} el the element to process
  * @param {Object} context the rendering context
- * @returns {Promise<Boolean>} if there was a include directive
+ * @returns {Promise<Boolean>} if there was an include directive
  */
 export async function processInclude(el, context) {
   if (!el.hasAttribute('data-fly-include')) return false;
@@ -185,7 +184,7 @@ export async function processInclude(el, context) {
 }
 
 /**
- * process the unwrap directive, leavving the attribute only if it resolves to true
+ * process the unwrap directive, leaving the attribute only if it resolves to true
  *
  * @param {Element} el the element to process
  * @param {Object} context the rendering context
