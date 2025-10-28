@@ -79,6 +79,7 @@ Faintly supports the following directives.
 * `data-fly-repeat` - Repeat an element for each item of a collection. Attribute value should be an expression that resolves to a collection of Nodes/Elements.
 * `data-fly-attributes` - Set attributes on the element. Attribute value should be an expression that resolves to a collection of key/value pairs.
 * `data-fly-content` - Replace the elements content/children. Attribute value should be an expression that resolves to a Node/Element/String, or a collection there-of.
+  * Content has precedence over include: if both `data-fly-content` and `data-fly-include` are present on the same element, only content is executed.
 * `data-fly-include` - Replace the elements content/children with another template. Attribute value can be:
    * the name of a template: `data-fly-include="a-template-name"`
    * the absolute path to a template file: `data-fly-include="/blocks/some-block/some-template.html"`
@@ -89,11 +90,15 @@ Faintly supports the following directives.
 > Directives are evaluated in a fixed order, as listed above, regardless of the order you place them on the element.
 > 
 > This means, for example, that the context item set in `data-fly-repeat` can be used in `data-fly-include` on the same element, but not in a `data-fly-test`.
+> 
+> When `data-fly-include` runs, the included template is fully rendered before being inserted and the element's children are not traversed again. This prevents double-processing. Conversely, when `data-fly-content` runs, the injected nodes are traversed so that any directives/expressions inside them are processed.
 
 ## Expressions
 
 Faintly supports a simple expression syntax for resolving data from the rendering context. It supports only object dot-notation, but will call (optionally async) functions as well. This means that if you need to do something that can't be expressed in dot-notation, then you need to define a custom function for it, and add that function to the rendering context.
 
-For `data-fly-include`, HTML text, and normal attributes, wrap your expression in `${}`. 
+For `data-fly-include`, HTML text, and normal attributes, wrap your expression in `${}`.
+
+Escaping: use a leading backslash to prevent evaluation of an expression in text/attributes, e.g. `\${some.value}` will remain literal `${some.value}`.
 
 In all other `data-fly-*` attributes, just set the expression directly as the attribute value, no wrapping needed.
