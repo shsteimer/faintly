@@ -17,8 +17,8 @@ Authoritative guide for AI/code agents contributing to this repository.
 - **Lint (auto-fix)**: `npm run lint:fix`
 - **Unit tests + coverage**: `npm test`
 - **Performance tests**: `npm run test:perf`
-- **Build bundle**: `npm run build` → outputs `dist/faintly.js`
-- **Build (watch)**: `npm run build:watch`
+- **Build bundle**: `npm run build` → outputs `dist/faintly.js` and prints gzipped size (warns if over limit)
+- **Build (strict)**: `npm run build:strict` → fails if gzipped size exceeds 5120 bytes
 - **Clean**: `npm run clean`
 
 ### Tests and coverage
@@ -49,7 +49,7 @@ Authoritative guide for AI/code agents contributing to this repository.
 
 ### CI behavior (GitHub Actions)
 - Workflow: `.github/workflows/main.yaml` runs on pull requests (open/sync/reopen).
-- Steps: checkout → Node 20 → `npm ci` → `npm run lint` → `npm test` → `npm run build` → gzip size check (<= 5120 bytes).
+- Steps: checkout → Node 20 → `npm ci` → `npm run lint` → `npm test` → `npm run build:strict`.
 - The workflow will attempt to commit updated `dist/` artifacts back to the PR branch if they changed.
 
 ### Repo layout
@@ -63,7 +63,7 @@ Authoritative guide for AI/code agents contributing to this repository.
 2. Make focused edits under `src/` and relevant tests under `test/`.
 3. Run `npm run lint:fix` then `npm run lint` and resolve any remaining issues.
 4. Run `npm test` and ensure coverage stays at 100%.
-5. Run `npm run build` and verify `dist/faintly.js` updates (if source changed).
+5. Run `npm run build:strict` and verify `dist/faintly.js` updates (if source changed).
 6. Ensure gzipped size of `dist/faintly.js` remains <= 5120 bytes (CI will enforce).
 7. Update `README.md` if you change public behavior or usage.
 8. Commit changes; open a PR. CI will validate and may commit updated `dist/` to the PR branch.
