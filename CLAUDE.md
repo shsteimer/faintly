@@ -1,0 +1,1 @@
+/Users/ssteimer/dev/projects/faintly/AGENTS.md
