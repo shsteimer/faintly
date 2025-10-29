@@ -32,15 +32,10 @@ function makeSecurityOptions() {
   };
 }
 
-function runSizeCheckNow() {
-  const code = runSizeCheck({ strict: isStrict });
-  if (code !== 0) throw new Error(`size check failed (${code})`);
-}
-
 async function main() {
   if (isCheckSizeOnly) {
-    runSizeCheckNow();
-    return;
+    const code = runSizeCheck(isStrict);
+    process.exit(code);
   }
 
   const securitySrcPath = path.join(process.cwd(), 'src', 'faintly.security.js');
@@ -51,7 +46,10 @@ async function main() {
       name: 'size-check',
       setup(b) {
         b.onEnd((res) => {
-          if (!res.errors || res.errors.length === 0) runSizeCheckNow();
+          if (!res.errors || res.errors.length === 0) {
+            // Always non-strict in watch mode - warn but don't exit
+            runSizeCheck(false);
+          }
         });
       },
     };
@@ -68,7 +66,9 @@ async function main() {
 
   await build(makeCoreOptions());
   if (hasSecurity) await build(makeSecurityOptions());
-  runSizeCheckNow();
+
+  const code = runSizeCheck(isStrict);
+  process.exit(code);
 }
 
 main().catch((err) => {

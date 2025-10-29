@@ -8,16 +8,16 @@ const CORE_FILE = path.join(ROOT, 'dist', 'faintly.js');
 const SECURITY_FILE = path.join(ROOT, 'dist', 'faintly.security.js');
 const CORE_LIMIT = Number(process.env.FAINTLY_CORE_GZIP_LIMIT || 4096);
 const TOTAL_LIMIT = Number(process.env.FAINTLY_TOTAL_GZIP_LIMIT || 6144);
-const STRICT = process.argv.includes('--strict');
 
-function formatBytes(bytes) {
-  return `${bytes} bytes`;
-}
+const RETURN_CODES = {
+  OK: 0,
+  FAILED: 1,
+};
 
-export default function runSizeCheck({ strict } = {}) {
+export default function runSizeCheck(strict = false) {
   if (!fs.existsSync(CORE_FILE)) {
     console.error(`[size-check] core dist file not found: ${CORE_FILE}`);
-    process.exit(1);
+    return RETURN_CODES.FAILED;
   }
 
   const coreBuf = fs.readFileSync(CORE_FILE);
@@ -32,21 +32,16 @@ export default function runSizeCheck({ strict } = {}) {
   const coreOk = coreGz <= CORE_LIMIT;
   const totalOk = totalGz <= TOTAL_LIMIT;
 
-  const coreMsg = `[size-check] core gz (dist/faintly.js): ${formatBytes(coreGz)} (limit ${formatBytes(CORE_LIMIT)})`;
-  const totalMsg = `[size-check] total gz (core + security): ${formatBytes(totalGz)} (limit ${formatBytes(TOTAL_LIMIT)})`;
+  const coreMsg = `[size-check] core gz (dist/faintly.js): ${coreGz} bytes (limit ${CORE_LIMIT} bytes)`;
+  const totalMsg = `[size-check] total gz (core + security): ${totalGz} bytes (limit ${TOTAL_LIMIT} bytes)`;
 
   if (coreOk) console.log(coreMsg); else console.error(`${coreMsg} — over limit.`);
   if (totalOk) console.log(totalMsg); else console.error(`${totalMsg} — over limit.`);
 
   const ok = coreOk && totalOk;
-  if (ok) return 0;
-  if (strict) return 1;
+  if (ok) return RETURN_CODES.OK;
+  if (strict) return RETURN_CODES.FAILED;
+  
   console.warn('[size-check] Limits exceeded (warning only).');
-  return 0;
-}
-
-// Execute when run directly via node scripts/check-size.mjs
-if (import.meta.url === new URL(`file://${process.argv[1]}`).href) {
-  const code = runSizeCheck({ strict: STRICT });
-  process.exit(code);
+  return RETURN_CODES.OK;
 }
