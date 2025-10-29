@@ -9,15 +9,10 @@ const SECURITY_FILE = path.join(ROOT, 'dist', 'faintly.security.js');
 const CORE_LIMIT = Number(process.env.FAINTLY_CORE_GZIP_LIMIT || 4096);
 const TOTAL_LIMIT = Number(process.env.FAINTLY_TOTAL_GZIP_LIMIT || 6144);
 
-const RETURN_CODES = {
-  OK: 0,
-  FAILED: 1,
-};
-
 export default function runSizeCheck(strict = false) {
   if (!fs.existsSync(CORE_FILE)) {
     console.error(`[size-check] core dist file not found: ${CORE_FILE}`);
-    return RETURN_CODES.FAILED;
+    process.exit(1);
   }
 
   const coreBuf = fs.readFileSync(CORE_FILE);
@@ -39,9 +34,8 @@ export default function runSizeCheck(strict = false) {
   if (totalOk) console.log(totalMsg); else console.error(`${totalMsg} — over limit.`);
 
   const ok = coreOk && totalOk;
-  if (ok) return RETURN_CODES.OK;
-  if (strict) return RETURN_CODES.FAILED;
-  
+  if (ok) return 0;
+  if (strict) return 1;
   console.warn('[size-check] Limits exceeded (warning only).');
-  return RETURN_CODES.OK;
+  return 0;
 }

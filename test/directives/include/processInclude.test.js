@@ -56,4 +56,74 @@ describe('processInclude', () => {
     });
     expect(el.hasAttribute('data-fly-include')).to.equal(false);
   });
+
+  describe('security integration', () => {
+    it('calls allowIncludePath hook when security context is provided', async () => {
+      const el = document.createElement('div');
+      el.setAttribute('data-fly-include', '/test/fixtures/blocks/static-block/custom-template.html');
+
+      let allowIncludePathCalled = false;
+      const customSecurity = {
+        shouldAllowAttribute: () => true,
+        allowIncludePath: (path) => {
+          allowIncludePathCalled = true;
+          return path.startsWith('/test/fixtures');
+        },
+      };
+
+      await processInclude(el, {
+        template: { path: '/test/fixtures/blocks/static-block/static-block.html' },
+        security: customSecurity,
+      });
+
+      expect(allowIncludePathCalled).to.equal(true);
+      expect(el.hasAttribute('data-fly-include')).to.equal(false);
+    });
+
+    it('blocks include when allowIncludePath returns false', async () => {
+      const el = document.createElement('div');
+      el.setAttribute('data-fly-include', '/blocked/path/template.html');
+
+      const customSecurity = {
+        shouldAllowAttribute: () => true,
+        allowIncludePath: () => false,
+      };
+
+      await processInclude(el, {
+        template: { path: '/test/fixtures/blocks/static-block/static-block.html' },
+        security: customSecurity,
+      });
+
+      expect(el.hasAttribute('data-fly-include')).to.equal(false);
+      expect(el.childNodes.length).to.equal(0);
+    });
+
+    it('allows includes in unsafe mode with security: false', async () => {
+      const el = document.createElement('div');
+      el.setAttribute('data-fly-include', '/test/fixtures/blocks/static-block/custom-template.html');
+
+      await processInclude(el, {
+        template: { path: '/test/fixtures/blocks/static-block/static-block.html' },
+        security: false,
+      });
+
+      expect(el.hasAttribute('data-fly-include')).to.equal(false);
+      expect(el.childNodes.length).to.be.greaterThan(0);
+    });
+
+    it('allows includes in unsafe mode with security: "unsafe"', async () => {
+      const el = document.createElement('div');
+      el.setAttribute('data-fly-include', '/test/fixtures/blocks/static-block/custom-template.html');
+
+      await processInclude(el, {
+        template: { path: '/test/fixtures/blocks/static-block/static-block.html' },
+        security: 'unsafe',
+      });
+
+      expect(el.hasAttribute('data-fly-include')).to.equal(false);
+      expect(el.childNodes.length).to.be.greaterThan(0);
+    });
+
+    it.skip('loads default security module when no security context provided - test once real security enforces path restrictions');
+  });
 });

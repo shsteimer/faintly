@@ -21,7 +21,7 @@ async function getSecurity(context) {
     }
   }
 
-  // custom mode, ensure neededfunctions are present, use no-ops for missing ones
+  // custom mode, ensure needed functions are present, use no-ops for missing ones
   return {
     shouldAllowAttribute: security.shouldAllowAttribute || (() => true),
     allowIncludePath: security.allowIncludePath || (() => true),

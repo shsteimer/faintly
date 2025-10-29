@@ -10,9 +10,6 @@ module.exports = {
     sourceType: 'module',
     requireConfigFile: false,
   },
-  settings: {
-    'import/extensions': ['.js', '.mjs'],
-  },
   rules: {
     // Globally require .js file extensions in imports
     'import/extensions': ['error', { js: 'always' }],

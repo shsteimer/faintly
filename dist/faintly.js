@@ -63,14 +63,23 @@ async function processTextExpressions(node, context) {
 
 // src/directives.js
 async function getSecurity(context) {
-  const cfg = context && context.security;
-  if (cfg === false || cfg === "unsafe") return null;
-  if (cfg && typeof cfg.allowIncludePath === "function" && typeof cfg.shouldAllowAttribute === "function") {
-    return cfg;
+  const { security } = context;
+  if (security === false || security === "unsafe") {
+    return {
+      shouldAllowAttribute: (() => true),
+      allowIncludePath: (() => true)
+    };
   }
-  const createSecurity = (await import("./faintly.security.js")).default;
-  if (cfg && typeof cfg === "object") return createSecurity(cfg);
-  return createSecurity();
+  if (!security) {
+    const securityMod = await import("./faintly.security.js");
+    if (securityMod && securityMod.default) {
+      return securityMod.default();
+    }
+  }
+  return {
+    shouldAllowAttribute: security.shouldAllowAttribute || (() => true),
+    allowIncludePath: security.allowIncludePath || (() => true)
+  };
 }
 async function processAttributesDirective(el, context) {
   if (!el.hasAttribute("data-fly-attributes")) return;
@@ -83,9 +92,11 @@ async function processAttributesDirective(el, context) {
       const name = String(k);
       if (v === void 0) {
         el.removeAttribute(name);
-      } else if (!sec || sec.shouldAllowAttribute(name, v, context)) {
+      } else if (sec.shouldAllowAttribute(name, v, context)) {
         el.setAttribute(name, v);
-      } else el.removeAttribute(name);
+      } else {
+        el.removeAttribute(name);
+      }
     });
   }
 }
@@ -95,9 +106,11 @@ async function processAttributes(el, context) {
     const { updated, updatedText } = await resolveExpressions(el.getAttribute(attrName), context);
     if (updated) {
       const sec = await getSecurity(context);
-      if (!sec || sec.shouldAllowAttribute(attrName, updatedText, context)) {
+      if (!sec.shouldAllowAttribute(attrName, updatedText, context)) {
+        el.removeAttribute(attrName);
+      } else {
         el.setAttribute(attrName, updatedText);
-      } else el.removeAttribute(attrName);
+      }
     }
   });
   await Promise.all(attrPromises);
@@ -180,7 +193,7 @@ async function processInclude(el, context) {
   }
   if (templatePath) {
     const sec = await getSecurity(context);
-    const allowed = !sec || sec.allowIncludePath(templatePath, context);
+    const allowed = sec.allowIncludePath(templatePath, context);
     if (!allowed) {
       console.warn(`Blocked include outside allowed scope: ${new URL(templatePath, window.location.origin).href}`);
       el.removeAttribute("data-fly-include");
