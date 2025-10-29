@@ -102,7 +102,18 @@ describe('processAttributes', () => {
       expect(el.getAttribute('href')).to.equal('javascript:void(0)');
     });
 
-    it.skip('loads default security module when no security context provided - test once real security blocks attributes');
+    it('loads default security module when no security context provided', async () => {
+      const el = document.createElement('div');
+      el.setAttribute('data-fly-attributes', 'attrs');
+
+      // Default security should block event handlers
+      await processAttributes(el, {
+        attrs: { onclick: 'alert(1)', class: 'safe' },
+      });
+
+      expect(el.hasAttribute('onclick')).to.equal(false); // Blocked by default security
+      expect(el.getAttribute('class')).to.equal('safe'); // Safe attribute allowed
+    });
 
     it('applies security checks to expression-resolved attributes', async () => {
       const el = document.createElement('a');
