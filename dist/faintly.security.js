@@ -3,8 +3,7 @@ var DEFAULT_CONFIG = {
   blockedAttributePatterns: [/^on/i],
   blockedAttributes: ["srcdoc"],
   urlAttributes: ["href", "src", "action", "formaction", "xlink:href"],
-  allowedUrlSchemes: ["http:", "https:", "mailto:", "tel:"],
-  allowedTemplatePaths: null
+  allowedUrlSchemes: ["http:", "https:", "mailto:", "tel:"]
 };
 function isBlockedAttribute(attrName, blockedAttributePatterns, blockedAttributes) {
   const name = attrName.toLowerCase();
@@ -33,8 +32,7 @@ function createSecurity(config = {}) {
     blockedAttributePatterns,
     blockedAttributes,
     urlAttributes,
-    allowedUrlSchemes,
-    allowedTemplatePaths
+    allowedUrlSchemes
   } = mergedConfig;
   return {
     shouldAllowAttribute(attrName, value) {
@@ -47,22 +45,12 @@ function createSecurity(config = {}) {
       }
       return true;
     },
-    allowIncludePath(templatePath, context) {
+    allowIncludePath(templatePath) {
       if (!templatePath) {
         return true;
       }
       const templateUrl = new URL(templatePath, window.location.origin);
-      if (templateUrl.origin !== window.location.origin) {
-        return false;
-      }
-      const paths = allowedTemplatePaths || [context.codeBasePath || "/"];
-      return paths.some((allowedPath) => {
-        let normalizedPath = String(allowedPath);
-        if (!normalizedPath.endsWith("/")) {
-          normalizedPath = `${normalizedPath}/`;
-        }
-        return templateUrl.pathname.startsWith(normalizedPath);
-      });
+      return templateUrl.origin === window.location.origin;
     }
   };
 }

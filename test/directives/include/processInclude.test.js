@@ -124,32 +124,17 @@ describe('processInclude', () => {
       expect(el.childNodes.length).to.be.greaterThan(0);
     });
 
-    it('loads default security module when no security context provided', async () => {
+    it('loads default security module and allows same-origin paths', async () => {
       const el = document.createElement('div');
       el.setAttribute('data-fly-include', '/test/fixtures/blocks/static-block/custom-template.html');
 
-      // Default security should allow includes within codeBasePath
+      // Default security allows all same-origin paths
       await processInclude(el, {
-        codeBasePath: '/test/fixtures',
         template: { path: '/test/fixtures/blocks/static-block/static-block.html' },
       });
 
       expect(el.hasAttribute('data-fly-include')).to.equal(false);
       expect(el.childNodes.length).to.be.greaterThan(0);
-    });
-
-    it('loads default security module and blocks paths outside codeBasePath', async () => {
-      const el = document.createElement('div');
-      el.setAttribute('data-fly-include', '/not-allowed/template.html');
-
-      // Default security should block this path
-      await processInclude(el, {
-        codeBasePath: '/test/fixtures',
-        template: { path: '/test/fixtures/blocks/static-block/static-block.html' },
-      });
-
-      expect(el.hasAttribute('data-fly-include')).to.equal(false);
-      expect(el.childNodes.length).to.equal(0); // Should be blocked, no children added
     });
   });
 });
