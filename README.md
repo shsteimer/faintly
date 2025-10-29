@@ -197,8 +197,15 @@ Faintly supports the following directives.
 
 Faintly supports a simple expression syntax for resolving data from the rendering context. It supports only object dot-notation, but will call (optionally async) functions as well. This means that if you need to do something that can't be expressed in dot-notation, then you need to define a custom function for it, and add that function to the rendering context.
 
-For `data-fly-include`, HTML text, and normal attributes, wrap your expression in `${}`.
+**In `data-fly-*` directive attributes:**
+- Both bare expressions and `${}` wrapped expressions are supported
+- `data-fly-test="condition"` and `data-fly-test="${condition}"` both work
+- The `${}` syntax is supported for familiarity with HTL/Sightly
 
-Escaping: use a leading backslash to prevent evaluation of an expression in text/attributes, e.g. `\${some.value}` will remain literal `${some.value}`.
+**In `data-fly-include`, HTML text, and normal attributes:**
+- You must wrap your expression in `${}`
+- Example: `<div class="${className}">`, `<p>Hello ${user.name}</p>`
 
-In all other `data-fly-*` attributes, just set the expression directly as the attribute value, no wrapping needed.
+**Escaping:**
+- Use a leading backslash to prevent evaluation of an expression in text/attributes
+- Example: `\${some.value}` will remain literal `${some.value}`

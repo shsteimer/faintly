@@ -82,4 +82,26 @@ describe('resolveUnwrap', () => {
     await resolveUnwrap(numEl, { includeDiv: 0 });
     expect(numEl.hasAttribute('data-fly-unwrap')).to.equal(false);
   });
+
+  it('supports ${} wrapped expressions', async () => {
+    const el = document.createElement('div');
+    // eslint-disable-next-line no-template-curly-in-string
+    el.setAttribute('data-fly-unwrap', '${includeDiv}');
+    await resolveUnwrap(el, { includeDiv: true });
+    expect(el.hasAttribute('data-fly-unwrap')).to.equal(true);
+
+    const el2 = document.createElement('div');
+    // eslint-disable-next-line no-template-curly-in-string
+    el2.setAttribute('data-fly-unwrap', '${includeDiv}');
+    await resolveUnwrap(el2, { includeDiv: false });
+    expect(el2.hasAttribute('data-fly-unwrap')).to.equal(false);
+  });
+
+  it('supports ${} wrapped expressions with dot notation', async () => {
+    const el = document.createElement('div');
+    // eslint-disable-next-line no-template-curly-in-string
+    el.setAttribute('data-fly-unwrap', '${user.isAdmin}');
+    await resolveUnwrap(el, { user: { isAdmin: true } });
+    expect(el.hasAttribute('data-fly-unwrap')).to.equal(true);
+  });
 });

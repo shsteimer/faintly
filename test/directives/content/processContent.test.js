@@ -142,4 +142,28 @@ describe('processContent', () => {
     await processContent(el);
     expect(el.hasAttribute('data-fly-content')).to.equal(false);
   });
+
+  it('supports ${} wrapped expressions', async () => {
+    const el = document.createElement('div');
+    el.textContent = 'Some text';
+    // eslint-disable-next-line no-template-curly-in-string
+    el.setAttribute('data-fly-content', '${content}');
+    const result = await processContent(el, {
+      content: 'Some other text',
+    });
+    expect(result).to.equal(true);
+    expect(el.textContent).to.equal('Some other text');
+  });
+
+  it('supports ${} wrapped expressions with dot notation', async () => {
+    const el = document.createElement('div');
+    el.textContent = 'Some text';
+    // eslint-disable-next-line no-template-curly-in-string
+    el.setAttribute('data-fly-content', '${user.name}');
+    const result = await processContent(el, {
+      user: { name: 'Bob' },
+    });
+    expect(result).to.equal(true);
+    expect(el.textContent).to.equal('Bob');
+  });
 });

@@ -1,4 +1,17 @@
 /**
+ * Strips ${} wrapper from expression if present for HTL compatibility
+ * @param {string} expression the expression that may be wrapped
+ * @returns {string} the unwrapped expression
+ */
+export function unwrapExpression(expression) {
+  const trimmed = expression.trim();
+  if (trimmed.startsWith('${') && trimmed.endsWith('}')) {
+    return trimmed.slice(2, -1).trim();
+  }
+  return expression;
+}
+
+/**
  * resolves and returns data from the rendering context
  *
  * @param {string} expression the name of the data

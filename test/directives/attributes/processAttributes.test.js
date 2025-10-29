@@ -151,5 +151,23 @@ describe('processAttributes', () => {
 
       expect(el.hasAttribute('href')).to.equal(false);
     });
+
+    it('supports ${} wrapped expressions in data-fly-attributes', async () => {
+      const el = document.createElement('div');
+      // eslint-disable-next-line no-template-curly-in-string
+      el.setAttribute('data-fly-attributes', '${attrsObj}');
+      const context = {
+        attrsObj: {
+          foo: 'bar',
+          id: 'some-id',
+          class: 'some-class',
+        },
+      };
+      context.security = await initializeSecurity(context);
+      await processAttributes(el, context);
+      expect(el.getAttribute('foo')).to.equal('bar');
+      expect(el.getAttribute('id')).to.equal('some-id');
+      expect(el.getAttribute('class')).to.equal('some-class');
+    });
   });
 });

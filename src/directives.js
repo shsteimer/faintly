@@ -1,11 +1,11 @@
-import { resolveExpression, resolveExpressions } from './expressions.js';
+import { resolveExpression, resolveExpressions, unwrapExpression } from './expressions.js';
 // eslint-disable-next-line import/no-cycle
 import { processNode, renderElement } from './render.js';
 
 async function processAttributesDirective(el, context) {
   if (!el.hasAttribute('data-fly-attributes')) return;
 
-  const attrsExpression = el.getAttribute('data-fly-attributes');
+  const attrsExpression = unwrapExpression(el.getAttribute('data-fly-attributes'));
   const attrsData = await resolveExpression(attrsExpression, context);
 
   el.removeAttribute('data-fly-attributes');
@@ -61,7 +61,7 @@ export async function processTest(el, context) {
   const nameParts = testAttrName.split('.');
   const contextName = nameParts[1] || '';
 
-  const testExpression = el.getAttribute(testAttrName);
+  const testExpression = unwrapExpression(el.getAttribute(testAttrName));
   const testData = await resolveExpression(testExpression, context);
 
   el.removeAttribute(testAttrName);
@@ -87,7 +87,7 @@ export async function processTest(el, context) {
 export async function processContent(el, context) {
   if (!el.hasAttribute('data-fly-content')) return false;
 
-  const contentExpression = el.getAttribute('data-fly-content');
+  const contentExpression = unwrapExpression(el.getAttribute('data-fly-content'));
   const content = await resolveExpression(contentExpression, context);
 
   el.removeAttribute('data-fly-content');
@@ -123,7 +123,7 @@ export async function processRepeat(el, context) {
   const nameParts = repeatAttrName.split('.');
   const contextName = nameParts[1] || 'item';
 
-  const repeatExpression = el.getAttribute(repeatAttrName);
+  const repeatExpression = unwrapExpression(el.getAttribute(repeatAttrName));
   const arr = await resolveExpression(repeatExpression, context);
   if (!arr || Object.keys(arr).length === 0) {
     el.remove();
@@ -211,9 +211,9 @@ export async function processInclude(el, context) {
 export async function resolveUnwrap(el, context) {
   if (!el.hasAttribute('data-fly-unwrap')) return;
 
-  const unwrapExpression = el.getAttribute('data-fly-unwrap');
-  if (unwrapExpression) {
-    const unwrapVal = !!(await resolveExpression(unwrapExpression, context));
+  const unwrapExpr = el.getAttribute('data-fly-unwrap');
+  if (unwrapExpr) {
+    const unwrapVal = !!(await resolveExpression(unwrapExpression(unwrapExpr), context));
 
     if (!unwrapVal) {
       el.removeAttribute('data-fly-unwrap');
