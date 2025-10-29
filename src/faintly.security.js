@@ -3,15 +3,10 @@
  * Users can see and override these defaults by passing custom values to createSecurity().
  */
 export const DEFAULT_CONFIG = {
-  // Attribute security
-  blockedAttributePatterns: [/^on/i], // Block event handlers (onclick, onload, etc.)
-  blockedAttributes: ['srcdoc'], // Block dangerous attributes
-
-  // URL attribute security
+  blockedAttributePatterns: [/^on/i],
+  blockedAttributes: ['srcdoc'],
   urlAttributes: ['href', 'src', 'action', 'formaction', 'xlink:href'],
   allowedUrlSchemes: ['http:', 'https:', 'mailto:', 'tel:'],
-
-  // Include path security
   includeBasePath: null,
 };
 

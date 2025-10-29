@@ -1,14 +1,9 @@
 // src/faintly.security.js
 var DEFAULT_CONFIG = {
-  // Attribute security
   blockedAttributePatterns: [/^on/i],
-  // Block event handlers (onclick, onload, etc.)
   blockedAttributes: ["srcdoc"],
-  // Block dangerous attributes
-  // URL attribute security
   urlAttributes: ["href", "src", "action", "formaction", "xlink:href"],
   allowedUrlSchemes: ["http:", "https:", "mailto:", "tel:"],
-  // Include path security
   includeBasePath: null
 };
 function isBlockedAttribute(attrName, blockedAttributePatterns, blockedAttributes) {
