@@ -1,6 +1,6 @@
 {
   "name": "faintly",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "HTML Markup Transformation Library for AEM Blocks",
   "main": "src/index.js",
   "scripts": {
