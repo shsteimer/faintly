@@ -7,7 +7,7 @@ export const DEFAULT_CONFIG = {
   blockedAttributes: ['srcdoc'],
   urlAttributes: ['href', 'src', 'action', 'formaction', 'xlink:href'],
   allowedUrlSchemes: ['http:', 'https:', 'mailto:', 'tel:'],
-  includeBasePath: null,
+  allowedTemplatePaths: null,
 };
 
 /**
@@ -70,8 +70,9 @@ function isUrlAttribute(attrName, urlAttributes) {
  * @param {Array<string>} [config.allowedUrlSchemes]
  *   Array of allowed URL schemes (e.g., ['http:', 'https:']).
  *   Relative URLs are always allowed.
- * @param {string|Function} [config.includeBasePath]
- *   Base path for allowed includes
+ * @param {Array<string>} [config.allowedTemplatePaths]
+ *   Array of allowed template path prefixes (e.g., ['/blocks', '/shared']).
+ *   Defaults to context.codeBasePath if not provided.
  * @returns {Object} Security hooks
  */
 export default function createSecurity(config = {}) {
@@ -85,6 +86,7 @@ export default function createSecurity(config = {}) {
     blockedAttributes,
     urlAttributes,
     allowedUrlSchemes,
+    allowedTemplatePaths,
   } = mergedConfig;
 
   return {
@@ -100,9 +102,33 @@ export default function createSecurity(config = {}) {
 
       return true;
     },
-    allowIncludePath() {
-      // TODO: Implement include path restriction logic
-      return true;
+    allowIncludePath(templatePath, context) {
+      // Empty or null paths are allowed
+      if (!templatePath) {
+        return true;
+      }
+
+      // Parse URL to check origin and extract pathname
+      const templateUrl = new URL(templatePath, window.location.origin);
+
+      // Enforce same-origin
+      if (templateUrl.origin !== window.location.origin) {
+        return false;
+      }
+
+      // Determine allowed paths (default to codeBasePath if not configured)
+      const paths = allowedTemplatePaths || [context.codeBasePath || '/'];
+
+      // Check if pathname matches any allowed path prefix
+      return paths.some((allowedPath) => {
+        // Normalize (ensure trailing slash)
+        let normalizedPath = String(allowedPath);
+        if (!normalizedPath.endsWith('/')) {
+          normalizedPath = `${normalizedPath}/`;
+        }
+
+        return templateUrl.pathname.startsWith(normalizedPath);
+      });
     },
   };
 }

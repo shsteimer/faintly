@@ -140,12 +140,73 @@ describe('createSecurity', () => {
   });
 
   describe('allowIncludePath', () => {
-    it('allows all paths (stub implementation)', () => {
+    it('allows paths within default base (context.codeBasePath)', () => {
       const security = createSecurity();
+      const context = { codeBasePath: '/blocks' };
 
-      // Currently a stub that allows everything
-      expect(security.allowIncludePath('/any/path')).to.equal(true);
-      expect(security.allowIncludePath('/another/path')).to.equal(true);
+      expect(security.allowIncludePath('/blocks/card/card.html', context)).to.equal(true);
+      expect(security.allowIncludePath('/blocks/header/header.html', context)).to.equal(true);
+    });
+
+    it('blocks paths outside codeBasePath', () => {
+      const security = createSecurity();
+      const context = { codeBasePath: '/blocks' };
+
+      expect(security.allowIncludePath('/scripts/evil.js', context)).to.equal(false);
+      expect(security.allowIncludePath('/other/path.html', context)).to.equal(false);
+    });
+
+    it('allows custom allowedTemplatePaths array', () => {
+      const security = createSecurity({
+        allowedTemplatePaths: ['/templates', '/shared'],
+      });
+      const context = { codeBasePath: '/blocks' };
+
+      expect(security.allowIncludePath('/templates/card.html', context)).to.equal(true);
+      expect(security.allowIncludePath('/shared/util.html', context)).to.equal(true);
+      expect(security.allowIncludePath('/blocks/card.html', context)).to.equal(false);
+    });
+
+    it('handles empty or null paths', () => {
+      const security = createSecurity();
+      const context = { codeBasePath: '/blocks' };
+
+      expect(security.allowIncludePath('', context)).to.equal(true);
+      expect(security.allowIncludePath(null, context)).to.equal(true);
+    });
+
+    it('normalizes trailing slashes in allowed paths', () => {
+      const security = createSecurity({
+        allowedTemplatePaths: ['/templates'],
+      });
+      const context = {};
+
+      expect(security.allowIncludePath('/templates/card.html', context)).to.equal(true);
+    });
+
+    it('blocks cross-origin URLs', () => {
+      const security = createSecurity();
+      const context = { codeBasePath: '/blocks' };
+
+      expect(security.allowIncludePath('https://evil.com/blocks/card.html', context)).to.equal(false);
+      expect(security.allowIncludePath('http://evil.com/blocks/card.html', context)).to.equal(false);
+      expect(security.allowIncludePath('//evil.com/blocks/card.html', context)).to.equal(false);
+    });
+
+    it('allows same-origin full URLs', () => {
+      const security = createSecurity();
+      const context = { codeBasePath: '/blocks' };
+
+      const sameOriginUrl = `${window.location.origin}/blocks/card.html`;
+      expect(security.allowIncludePath(sameOriginUrl, context)).to.equal(true);
+    });
+
+    it('fallsback to root (/) when codeBasePath is undefined', () => {
+      const security = createSecurity();
+      const context = {};
+
+      // Should fallback to / (allow everything from root)
+      expect(security.allowIncludePath('/anything/file.html', context)).to.equal(true);
     });
   });
 });

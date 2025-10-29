@@ -4,7 +4,7 @@ var DEFAULT_CONFIG = {
   blockedAttributes: ["srcdoc"],
   urlAttributes: ["href", "src", "action", "formaction", "xlink:href"],
   allowedUrlSchemes: ["http:", "https:", "mailto:", "tel:"],
-  includeBasePath: null
+  allowedTemplatePaths: null
 };
 function isBlockedAttribute(attrName, blockedAttributePatterns, blockedAttributes) {
   const name = attrName.toLowerCase();
@@ -33,7 +33,8 @@ function createSecurity(config = {}) {
     blockedAttributePatterns,
     blockedAttributes,
     urlAttributes,
-    allowedUrlSchemes
+    allowedUrlSchemes,
+    allowedTemplatePaths
   } = mergedConfig;
   return {
     shouldAllowAttribute(attrName, value) {
@@ -46,8 +47,22 @@ function createSecurity(config = {}) {
       }
       return true;
     },
-    allowIncludePath() {
-      return true;
+    allowIncludePath(templatePath, context) {
+      if (!templatePath) {
+        return true;
+      }
+      const templateUrl = new URL(templatePath, window.location.origin);
+      if (templateUrl.origin !== window.location.origin) {
+        return false;
+      }
+      const paths = allowedTemplatePaths || [context.codeBasePath || "/"];
+      return paths.some((allowedPath) => {
+        let normalizedPath = String(allowedPath);
+        if (!normalizedPath.endsWith("/")) {
+          normalizedPath = `${normalizedPath}/`;
+        }
+        return templateUrl.pathname.startsWith(normalizedPath);
+      });
     }
   };
 }
