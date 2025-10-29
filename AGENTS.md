@@ -17,8 +17,10 @@ Authoritative guide for AI/code agents contributing to this repository.
 - **Lint (auto-fix)**: `npm run lint:fix`
 - **Unit tests + coverage**: `npm test`
 - **Performance tests**: `npm run test:perf`
-- **Build bundle**: `npm run build` → outputs `dist/faintly.js` and prints gzipped size (warns if over limit)
-- **Build (strict)**: `npm run build:strict` → fails if gzipped size exceeds 5120 bytes
+- **Build**: `npm run build` → builds `dist/faintly.js` (core) and `dist/faintly.security.js` (security helper) and prints gzipped sizes; warns if caps are exceeded.
+- **Build (watch)**: `npm run build:watch` → watches both bundles and runs size checks on rebuilds.
+- **Build (strict)**: `npm run build:strict` → fails if gzipped size caps are exceeded.
+- **Size check only**: `npm run check:size` (or `check:size:strict`)
 - **Clean**: `npm run clean`
 
 ### Tests and coverage
@@ -43,9 +45,14 @@ Authoritative guide for AI/code agents contributing to this repository.
   - Keep modules small and readable; avoid deep nesting; avoid unnecessary try/catch.
 
 ### Build and artifacts
-- Bundling uses `esbuild` to produce a single ESM file at `dist/faintly.js` for browser usage.
-- CI enforces a gzipped bundle size limit of **5KB (5120 bytes)**. Keep additions small; avoid adding heavy dependencies.
-- If you change source under `src/`, run `npm run build` so `dist/faintly.js` is up to date.
+- Bundling uses `esbuild` to produce ESM bundles:
+  - Core: `dist/faintly.js` (browser usage)
+  - Security helper: `dist/faintly.security.js` (optional, dynamically imported by consumers)
+- Size caps (gzip):
+  - Core cap: 4KB (4096 bytes)
+  - Total cap: 6KB (6144 bytes) for `core + security`
+- Strict mode and CI enforce these caps. Keep additions small; avoid heavy deps.
+- If you change source under `src/`, run `npm run build` so `dist/` is up to date.
 
 ### CI behavior (GitHub Actions)
 - Workflow: `.github/workflows/main.yaml` runs on pull requests (open/sync/reopen).
@@ -53,8 +60,8 @@ Authoritative guide for AI/code agents contributing to this repository.
 - The workflow will attempt to commit updated `dist/` artifacts back to the PR branch if they changed.
 
 ### Repo layout
-- `src/`: library source (`index.js`, `render.js`, `directives.js`, `expressions.js`, `templates.js`).
-- `dist/`: built artifact (`faintly.js`).
+- `src/`: library source (`index.js`, `render.js`, `directives.js`, `expressions.js`, `templates.js`, `faintly.security.js`).
+- `dist/`: built artifacts (`faintly.js`, `faintly.security.js`).
 - `test/`: unit/perf tests, fixtures, snapshots, and utilities.
 - `coverage/`: coverage output when tests are run with coverage.
 
@@ -78,6 +85,7 @@ Authoritative guide for AI/code agents contributing to this repository.
 - Keep the bundle tiny; avoid adding runtime deps.
 - Maintain 100% test coverage; do not reduce thresholds or exclude more files.
 - Respect ESM and `.js` extension import rule.
+- Build scripts are `.mjs` and are linted; Node APIs are allowed only under `scripts/**`.
 - Do not introduce Node-only APIs into browser code paths.
 
 

@@ -2,6 +2,32 @@ import { resolveExpression, resolveExpressions } from './expressions.js';
 // eslint-disable-next-line import/no-cycle
 import { processNode, renderElement } from './render.js';
 
+async function getSecurity(context) {
+  const { security } = context;
+
+  // unsafe mode
+  if (security === false || security === 'unsafe') {
+    return {
+      shouldAllowAttribute: (() => true),
+      allowIncludePath: (() => true),
+    };
+  }
+
+  // default mode
+  if (!security) {
+    const securityMod = await import('./faintly.security.js');
+    if (securityMod && securityMod.default) {
+      return securityMod.default();
+    }
+  }
+
+  // custom mode, ensure neededfunctions are present, use no-ops for missing ones
+  return {
+    shouldAllowAttribute: security.shouldAllowAttribute || (() => true),
+    allowIncludePath: security.allowIncludePath || (() => true),
+  };
+}
+
 async function processAttributesDirective(el, context) {
   if (!el.hasAttribute('data-fly-attributes')) return;
 
@@ -10,11 +36,15 @@ async function processAttributesDirective(el, context) {
 
   el.removeAttribute('data-fly-attributes');
   if (attrsData) {
+    const sec = await getSecurity(context);
     Object.entries(attrsData).forEach(([k, v]) => {
+      const name = String(k);
       if (v === undefined) {
-        el.removeAttribute(k);
+        el.removeAttribute(name);
+      } else if (sec.shouldAllowAttribute(name, v, context)) {
+        el.setAttribute(name, v);
       } else {
-        el.setAttribute(k, v);
+        el.removeAttribute(name);
       }
     });
   }
@@ -33,7 +63,14 @@ export async function processAttributes(el, context) {
     .filter((attrName) => !attrName.startsWith('data-fly-'))
     .map(async (attrName) => {
       const { updated, updatedText } = await resolveExpressions(el.getAttribute(attrName), context);
-      if (updated) el.setAttribute(attrName, updatedText);
+      if (updated) {
+        const sec = await getSecurity(context);
+        if (!sec.shouldAllowAttribute(attrName, updatedText, context)) {
+          el.removeAttribute(attrName);
+        } else {
+          el.setAttribute(attrName, updatedText);
+        }
+      }
     });
   await Promise.all(attrPromises);
 }
@@ -168,6 +205,18 @@ export async function processInclude(el, context) {
     const [path, name] = templateName.split('#');
     templatePath = path;
     templateName = name;
+  }
+
+  // Enforce include path restrictions: same-origin and within allowed base path
+  if (templatePath) {
+    const sec = await getSecurity(context);
+    const allowed = sec.allowIncludePath(templatePath, context);
+    if (!allowed) {
+      // eslint-disable-next-line no-console
+      console.warn(`Blocked include outside allowed scope: ${new URL(templatePath, window.location.origin).href}`);
+      el.removeAttribute('data-fly-include');
+      return true;
+    }
   }
 
   const includeContext = {
