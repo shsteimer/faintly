@@ -28,6 +28,10 @@ async function resolveTemplate(context) {
 }
 
 // src/expressions.js
+function evaluate(expr, context) {
+  const fn = new Function("ctx", `with(ctx) { return ${expr}; }`);
+  return fn(context);
+}
 function unwrapExpression(expression) {
   const trimmed = expression.trim();
   if (trimmed.startsWith("${") && trimmed.endsWith("}")) {
@@ -36,9 +40,14 @@ function unwrapExpression(expression) {
   return expression;
 }
 async function resolveExpression(expression, context) {
+  const trimmedExpression = expression.trim();
+  if (trimmedExpression.startsWith("utils:eval(") && trimmedExpression.endsWith(")")) {
+    const expr = trimmedExpression.slice(11, -1);
+    return evaluate(expr, context);
+  }
   let resolved = context;
   let previousResolvedValue;
-  const parts = expression.split(".");
+  const parts = trimmedExpression.split(".");
   for (let i = 0; i < parts.length; i += 1) {
     if (typeof resolved === "undefined") break;
     const part = parts[i];
@@ -52,7 +61,7 @@ async function resolveExpression(expression, context) {
   return resolved;
 }
 async function resolveExpressions(str, context) {
-  const regexp = /(\\)?\${([a-z0-9\\.\s]+)}/gi;
+  const regexp = /(\\)?\${([^}]+)}/gi;
   const promises = [];
   str.replaceAll(regexp, (match, escapeChar, expression) => {
     const replacementPromise = escapeChar ? Promise.resolve(match.slice(1)) : resolveExpression(expression.trim(), context);

@@ -1,4 +1,17 @@
 /**
+ * Evaluates a JavaScript expression in the given context.
+ * Uses Function constructor - requires 'unsafe-eval' CSP policy.
+ * @param {string} expr - The JavaScript expression to evaluate
+ * @param {object} context - The context object providing variables
+ * @returns {*} The result of evaluating the expression
+ */
+function evaluate(expr, context) {
+  // eslint-disable-next-line no-new-func
+  const fn = new Function('ctx', `with(ctx) { return ${expr}; }`);
+  return fn(context);
+}
+
+/**
  * Strips ${} wrapper from expression if present for HTL compatibility
  * @param {string} expression the expression that may be wrapped
  * @returns {string} the unwrapped expression
@@ -19,10 +32,17 @@ export function unwrapExpression(expression) {
  * @returns {Promise<any>} the data that was resolved
  */
 export async function resolveExpression(expression, context) {
+  // Handle utils:eval() syntax
+  const trimmedExpression = expression.trim();
+  if (trimmedExpression.startsWith('utils:eval(') && trimmedExpression.endsWith(')')) {
+    const expr = trimmedExpression.slice(11, -1); // Extract expression from utils:eval(...)
+    return evaluate(expr, context);
+  }
+
   let resolved = context;
   let previousResolvedValue;
 
-  const parts = expression.split('.');
+  const parts = trimmedExpression.split('.');
   for (let i = 0; i < parts.length; i += 1) {
     if (typeof resolved === 'undefined') break;
 
@@ -47,7 +67,7 @@ export async function resolveExpression(expression, context) {
  * @param {Object} context the rendering context
  */
 export async function resolveExpressions(str, context) {
-  const regexp = /(\\)?\${([a-z0-9\\.\s]+)}/gi;
+  const regexp = /(\\)?\${([^}]+)}/gi;
 
   const promises = [];
   str.replaceAll(regexp, (match, escapeChar, expression) => {

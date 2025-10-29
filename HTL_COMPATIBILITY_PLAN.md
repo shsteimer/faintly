@@ -57,6 +57,39 @@ Make `${}` optional in `data-fly-*` directives for consistency with HTL.
 
 ---
 
+#### 3. JavaScript Expression Evaluation with `utils:eval()` - ✅ IMPLEMENTED
+Add JavaScript expression evaluation using `utils:eval()` syntax for complex logic and operations.
+
+**Implementation Results:**
+- ✅ Added `evaluate()` function directly in `src/expressions.js` (kept internal, no separate bundle needed)
+- ✅ Modified `resolveExpression()` to detect and handle `utils:eval()` syntax
+- ✅ Updated regex pattern in `resolveExpressions()` to support complex expressions (`/(\\)?\${([^}]+)}/gi`)
+- ✅ Added 70 comprehensive tests covering:
+  - Comparisons (`>`, `<`, `>=`, `<=`, `===`, `!==`)
+  - Logical operators (`&&`, `||`, `!`)
+  - Ternary operator
+  - String methods (`.toUpperCase()`, `.toLowerCase()`, `.substring()`, `.trim()`, concatenation)
+  - Array methods (`.join()`, `.map()`, `.filter()`, `.length`, index access)
+  - Object access (nested properties, bracket notation, dynamic properties)
+  - Arithmetic operations (`+`, `-`, `*`, `/`, `%`)
+  - Global functions (`encodeURIComponent()`, `parseInt()`, `parseFloat()`)
+  - Custom helper functions from context
+  - Error handling (undefined variables, syntax errors)
+  - Edge cases (empty expression, whitespace, null, undefined, booleans)
+  - Real-world scenarios (admin checks, plural formatting, conditional CSS classes, status badges)
+- ✅ Updated README with comprehensive documentation including:
+  - Usage examples for all primary use cases
+  - List of supported operators and methods
+  - Custom helper function examples
+  - **Prominent CAUTION warning** about eval and CSP requirements
+  - Guidance on when to use `utils:eval()` vs context functions
+- ✅ 165 tests passing (70 new tests added) with 100% coverage maintained
+- ✅ Bundle size: 2804 bytes core (only 75 bytes increase!), 3450 bytes combined
+- ✅ All constraints met: under 4KB core limit, under 6KB combined limit
+- ✅ Lint passed, build passed
+
+---
+
 ### 🚧 To Implement
 
 #### 2. Add HTL Migration Documentation
@@ -89,164 +122,11 @@ Create a dedicated doc linked from README.md with side-by-side comparisons.
 
 ---
 
-### 🤔 Future Consideration
-
-#### 3. JavaScript Expression Evaluation with `utils:eval()`
-Add JavaScript expression evaluation using `utils:eval()` syntax for complex logic and operations.
-
-**Two Primary Use Cases:**
-
-1. **Comparisons** - For `data-fly-test` and `data-fly-not` directives
-2. **Formatting** - For text content and attribute values
-
-**Syntax Examples:**
-
-```html
-<!-- Comparisons in test directives -->
-<div data-fly-test="utils:eval(count > 5)">More than 5</div>
-<div data-fly-test="utils:eval(user.isAdmin || user.isModerator)">Admin or mod</div>
-<div data-fly-test="utils:eval(isValid && isActive)">Valid and active</div>
-<div data-fly-not="utils:eval(status === 'disabled')">Not disabled</div>
-<div data-fly-test="utils:eval((count > 5 && !isDisabled) || isAdmin)">Complex logic</div>
-
-<!-- Ternary operator -->
-<div>${utils:eval(showCount ? count : 'N/A')}</div>
-<div class="${utils:eval(isActive ? 'active' : 'inactive')}">Status</div>
-
-<!-- String/array methods (native JavaScript) -->
-<div>${utils:eval(items.join(', '))}</div>
-<div>${utils:eval(user.name.toUpperCase())}</div>
-<a href="${utils:eval(encodeURIComponent(userUrl))}">Link</a>
-<p>${utils:eval('Hello ' + user.name)}</p>
-
-<!-- Array/object access -->
-<div>${utils:eval(items[0])}</div>
-<div>${utils:eval(user.profile.name)}</div>
-```
-
-**Implementation Approach: JavaScript Evaluation with `new Function()`**
-
-**Architecture:**
-- Separate bundle: `dist/faintly.utils.js` (like security module)
-- Dynamically imported on first `utils:eval()` usage
-- Cached after first load (no reload on subsequent use)
-- Uses `new Function()` to evaluate JavaScript expressions in context scope
-
-**Expression Evaluation:**
-```javascript
-// In src/expressions.js - detect utils:eval(...)
-if (expression.startsWith('utils:eval(') && expression.endsWith(')')) {
-  if (!utilsModule) {
-    utilsModule = await import('./faintly.utils.js');
-  }
-  const expr = expression.slice(11, -1); // Extract expression from utils:eval(...)
-  return utilsModule.evaluate(expr, context);
-}
-
-// In src/faintly.utils.js
-export function evaluate(expr, context) {
-  const fn = new Function('ctx', `with(ctx) { return ${expr}; }`);
-  return fn(context);
-}
-```
-
-**Supports Full JavaScript Syntax:**
-- **Comparisons**: `count > 5`, `status === 'active'`
-- **Logical operators**: `isAdmin || isModerator`, `isValid && isActive`
-- **Ternary**: `condition ? 'yes' : 'no'`
-- **Method calls**: `items.join(', ')`, `name.toUpperCase()`
-- **Array/object access**: `items[0]`, `user.profile.name`
-- **Complex expressions**: `(count > 5 && !isDisabled) || isAdmin`
-
-**Why this approach:**
-- ✅ **Appropriately scary** - `eval` in the name warns developers about what's happening
-- ✅ **Explicit and clear** - `utils:eval(expression)` is self-documenting
-- ✅ Minimal bundle impact (~100-150 bytes)
-- ✅ Full JavaScript expressiveness
-- ✅ Simple implementation, easy to maintain
-- ✅ Error handling - throws on invalid syntax
-- ✅ Supports all use cases without parser limitations
-- ✅ Future-proof - leaves room for `utils:safe()` or other utils later
-
-**Security & CSP Considerations:**
-- ⚠️ Uses `new Function()` which requires `unsafe-eval` CSP policy
-- ⚠️ Context is fully trusted - expressions have access to entire context
-- ⚠️ **Do not put untrusted user input in context** (already documented)
-- ⚠️ Templates are authored by developers (not user-generated)
-- ⚠️ If CSP blocks `unsafe-eval`, this feature cannot be used
-
-**Trade-offs:**
-- **Accepted**: CSP limitation, security responsibility on developer
-- **Benefit**: 400-500 byte savings vs custom parser
-- **Benefit**: No parser complexity or maintenance burden
-- **Benefit**: Full JavaScript power without artificial limitations
-
-**What You Can Use:**
-
-Since expressions are evaluated as JavaScript, you have access to:
-
-*Native JavaScript Operators:*
-- Comparison: `>`, `<`, `>=`, `<=`, `===`, `!==`
-- Logical: `&&`, `||`, `!`
-- Ternary: `condition ? ifTrue : ifFalse`
-- Arithmetic: `+`, `-`, `*`, `/`, `%`
-
-*Native JavaScript Methods:*
-- String: `.toUpperCase()`, `.toLowerCase()`, `.substring()`, `.trim()`, etc.
-- Array: `.join()`, `.map()`, `.filter()`, `.length`, `[index]`, etc.
-- Object: property access with `.` or `[]`
-- Global: `encodeURIComponent()`, `encodeURI()`, `parseInt()`, etc.
-
-*Optional Helper Functions:*
-You can add custom helpers to the context if needed:
-```javascript
-await renderBlock(block, {
-  items,
-  formatMessage: (name, count) => `Hello ${name}, you have ${count} messages`,
-  truncate: (str, len) => str.length > len ? str.slice(0, len) + '...' : str,
-});
-```
-```html
-<div>${utils:eval(formatMessage(user.name, messageCount))}</div>
-<p>${utils:eval(truncate(longText, 100))}</p>
-```
-
-**Implementation Steps:**
-1. Create `src/faintly.utils.js` with JavaScript evaluation function
-2. Modify `src/expressions.js` to detect `utils:eval()` syntax and dynamic import
-3. Add comprehensive tests for:
-   - Comparisons, logical operators, ternary
-   - String/array methods
-   - Complex nested expressions
-   - Error cases (syntax errors, undefined variables)
-   - Context helper functions being called
-4. Build separate `dist/faintly.utils.js` bundle
-5. Document in README with:
-   - Examples of common patterns with `utils:eval()`
-   - **Prominent warning**: Uses `eval` - understand the implications
-   - Security warnings (no untrusted input in context)
-   - CSP requirements (`unsafe-eval` policy required)
-   - When to use `utils:eval()` vs context functions
-6. Ensure bundle stays under 150 bytes (gzipped)
-
-**Error Handling:**
-- Throws JavaScript syntax errors with stack trace
-- Undefined variable errors bubble up naturally
-- Consider wrapping errors with more context (which template/directive)
-
-**Future Extensions:**
-- Optional `utils:safe()` with custom parser if users need CSP compatibility
-  - Example: `utils:safe(gt(count, 5))` - uses safe parser, no eval
-  - Would be a larger bundle but CSP-compatible
-- Additional built-in helper functions based on user feedback
-- Allow passing custom helper functions via context `utils` property
-
----
-
 ## Implementation Order
 
 1. ✅ **Standardize expression syntax** (#1) - COMPLETED
 2. **Add migration documentation** (#2) - Document completed features
+3. ✅ **JavaScript expression evaluation with `utils:eval()`** (#3) - COMPLETED
 
 ## Testing Strategy
 

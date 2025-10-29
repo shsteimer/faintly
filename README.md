@@ -200,7 +200,6 @@ Faintly supports a simple expression syntax for resolving data from the renderin
 **In `data-fly-*` directive attributes:**
 - Both bare expressions and `${}` wrapped expressions are supported
 - `data-fly-test="condition"` and `data-fly-test="${condition}"` both work
-- The `${}` syntax is supported for familiarity with HTL/Sightly
 
 **In `data-fly-include`, HTML text, and normal attributes:**
 - You must wrap your expression in `${}`
@@ -209,3 +208,69 @@ Faintly supports a simple expression syntax for resolving data from the renderin
 **Escaping:**
 - Use a leading backslash to prevent evaluation of an expression in text/attributes
 - Example: `\${some.value}` will remain literal `${some.value}`
+
+### JavaScript Expression Evaluation with `utils:eval()`
+
+> [!CAUTION]
+> **⚠️ This feature uses JavaScript's `Function` constructor (similar to `eval`)**
+>
+> - Requires Content Security Policy with `'unsafe-eval'` directive
+> - The entire context is accessible to evaluated expressions
+> - **Never put untrusted user input in the context** (this applies to all Faintly features)
+> - If your CSP blocks `unsafe-eval`, this feature won't work
+>
+> Use `utils:eval()` thoughtfully. For complex logic, consider context functions instead.
+
+When a bit more logic is required, you canuse `utils:eval()` to evaluate JavaScript expressions. Some examples:
+
+```html
+<!-- Comparisons -->
+<div data-fly-test="utils:eval(count > 5)">More than 5</div>
+<div data-fly-test="utils:eval(status === 'active')">Active</div>
+
+<!-- Logical operators -->
+<div data-fly-test="utils:eval(isAdmin || isModerator)">Admin or mod</div>
+<div data-fly-test="utils:eval(isValid && isActive)">Valid and active</div>
+
+<!-- Ternary operator -->
+<div>${utils:eval(showCount ? count : 'N/A')}</div>
+<div class="${utils:eval(isActive ? 'active' : 'inactive')}">Status</div>
+
+<!-- Method calls with arguments -->
+<div>${utils:eval(items.join(', '))}</div>
+<div>${utils:eval(name.substring(0, 10))}</div>
+
+<!-- String concatenation -->
+<div>${utils:eval('Hello, ' + user.name)}</div>
+
+<!-- Arithmetic -->
+<div>${utils:eval(price * quantity)}</div>
+
+<!-- Complex expressions -->
+<div data-fly-test="utils:eval((count > 5 && !isDisabled) || isAdmin)">Complex logic</div>
+```
+
+**What works WITHOUT `utils:eval()`:**
+
+```html
+<!-- Simple property paths -->
+<div>${user.name}</div>
+<div>${user.profile.email}</div>
+
+<!-- Array length -->
+<div>${items.length}</div>
+
+<!-- Array access by numeric index using dot notation -->
+<div>${items.0}</div>
+<div>${items.1}</div>
+
+<!-- Function calls without arguments (auto-called by Faintly) -->
+<div>${user.getName}</div>
+<div>${text.trim}</div>
+```
+
+**When to Use `utils:eval()` vs Context Functions:**
+
+- **Use context functions** for complex logic, API calls, or data transformations
+- **Use `utils:eval()`** for simple comparisons, formatting, or inline expressions
+- Context functions are generally safer and more maintainable for complex operations
