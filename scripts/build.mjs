@@ -1,5 +1,7 @@
 /* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": true}] */
 import { build, context } from 'esbuild';
+import fs from 'node:fs';
+import path from 'node:path';
 import runSizeCheck from './check-size.mjs';
 
 const args = process.argv.slice(2);
@@ -41,6 +43,9 @@ async function main() {
     return;
   }
 
+  const securitySrcPath = path.join(process.cwd(), 'src', 'faintly.security.js');
+  const hasSecurity = fs.existsSync(securitySrcPath);
+
   if (isWatch) {
     const sizePlugin = {
       name: 'size-check',
@@ -52,9 +57,9 @@ async function main() {
     };
 
     const coreCtx = await context(makeCoreOptions([sizePlugin]));
-    const secCtx = await context(makeSecurityOptions());
+    const secCtx = hasSecurity ? await context(makeSecurityOptions()) : null;
     await coreCtx.watch();
-    await secCtx.watch();
+    if (secCtx) await secCtx.watch();
     // Keep process alive in watch mode
     // eslint-disable-next-line no-console
     console.log('[build] Watching for changes...');
@@ -62,7 +67,7 @@ async function main() {
   }
 
   await build(makeCoreOptions());
-  await build(makeSecurityOptions());
+  if (hasSecurity) await build(makeSecurityOptions());
   runSizeCheckNow();
 }
 
