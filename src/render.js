@@ -67,6 +67,37 @@ export async function renderTemplate(template, context) {
 }
 
 /**
+ * Initialize security for the rendering context
+ * @param {Object} context the rendering context
+ * @returns {Promise<Object>} security hooks
+ */
+export async function initializeSecurity(context) {
+  const { security } = context;
+
+  // unsafe mode
+  if (security === false || security === 'unsafe') {
+    return {
+      shouldAllowAttribute: (() => true),
+      allowIncludePath: (() => true),
+    };
+  }
+
+  // default mode
+  if (!security) {
+    const securityMod = await import('./faintly.security.js');
+    if (securityMod && securityMod.default) {
+      return securityMod.default();
+    }
+  }
+
+  // custom mode, ensure needed functions are present, use no-ops for missing ones
+  return {
+    shouldAllowAttribute: security.shouldAllowAttribute || (() => true),
+    allowIncludePath: security.allowIncludePath || (() => true),
+  };
+}
+
+/**
  * transform the element, replacing it's children with the content from the template
  * @param {Element} el the element
  * @param {Element} template the template element
@@ -84,6 +115,8 @@ export async function renderElementWithTemplate(el, template, context) {
  * @param {Object} context the rendering context
  */
 export async function renderElement(el, context) {
+  context.security = await initializeSecurity(context);
+
   const template = await resolveTemplate(context);
 
   await renderElementWithTemplate(el, template, context);

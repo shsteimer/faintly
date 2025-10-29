@@ -5,6 +5,7 @@ Authoritative guide for AI/code agents contributing to this repository.
 ### Project purpose
 - **What this is**: A small, dependency-free HTML templating/DOM rendering library for AEM Edge Delivery Services blocks (and other HTML fragments).
 - **Public API**: `renderBlock(element, context?)`, `renderElement(element, context?)` exported from `src/index.js` and bundled to `dist/faintly.js`.
+- **Security**: Built-in XSS protection via `src/faintly.security.js`, bundled to `dist/faintly.security.js` (dynamically loaded by default).
 
 ### Environment
 - **Node**: 20 (CI uses Node 20).
@@ -43,9 +44,12 @@ Authoritative guide for AI/code agents contributing to this repository.
   - Keep modules small and readable; avoid deep nesting; avoid unnecessary try/catch.
 
 ### Build and artifacts
-- Bundling uses `esbuild` to produce a single ESM file at `dist/faintly.js` for browser usage.
-- CI enforces a gzipped bundle size limit of **5KB (5120 bytes)**. Keep additions small; avoid adding heavy dependencies.
-- If you change source under `src/`, run `npm run build` so `dist/faintly.js` is up to date.
+- Bundling uses `esbuild` to produce two ESM bundles for browser usage:
+  - `dist/faintly.js` (core library, gzipped limit: **4KB / 4096 bytes**)
+  - `dist/faintly.security.js` (security module, separate to allow tree-shaking)
+- CI enforces a **combined gzipped size limit of 6KB (6144 bytes)** for both files.
+- Keep additions small; avoid adding heavy dependencies.
+- If you change source under `src/`, run `npm run build` so `dist/` artifacts are up to date.
 
 ### CI behavior (GitHub Actions)
 - Workflow: `.github/workflows/main.yaml` runs on pull requests (open/sync/reopen).
@@ -53,31 +57,47 @@ Authoritative guide for AI/code agents contributing to this repository.
 - The workflow will attempt to commit updated `dist/` artifacts back to the PR branch if they changed.
 
 ### Repo layout
-- `src/`: library source (`index.js`, `render.js`, `directives.js`, `expressions.js`, `templates.js`).
-- `dist/`: built artifact (`faintly.js`).
-- `test/`: unit/perf tests, fixtures, snapshots, and utilities.
-- `coverage/`: coverage output when tests are run with coverage.
+- `src/`: library source
+  - Core: `index.js`, `render.js`, `directives.js`, `expressions.js`, `templates.js`
+  - Security: `faintly.security.js`
+- `dist/`: built artifacts (`faintly.js`, `faintly.security.js`)
+- `test/`: unit/perf tests, fixtures, snapshots, and utilities
+  - `test/security/`: tests for security module
+- `coverage/`: coverage output when tests are run with coverage
 
 ### Contribution checklist for agents
 1. Install deps with `npm ci`.
 2. Make focused edits under `src/` and relevant tests under `test/`.
 3. Run `npm run lint:fix` then `npm run lint` and resolve any remaining issues.
 4. Run `npm test` and ensure coverage stays at 100%.
-5. Run `npm run build:strict` and verify `dist/faintly.js` updates (if source changed).
-6. Ensure gzipped size of `dist/faintly.js` remains <= 5120 bytes (CI will enforce).
+5. Run `npm run build:strict` and verify `dist/` artifacts update (if source changed).
+6. Ensure combined gzipped size remains <= 6144 bytes (CI will enforce).
 7. Update `README.md` if you change public behavior or usage.
 8. Commit changes; open a PR. CI will validate and may commit updated `dist/` to the PR branch.
 
 ### Public API and usage (for context)
-- Consumers copy `dist/faintly.js` into their AEM project and use:
+- Consumers copy `dist/faintly.js` and `dist/faintly.security.js` into their AEM project and use:
   - `renderBlock(block, context?)`
   - `renderElement(element, context?)`
-- See `README.md` for examples, directives, and expression syntax.
+- Security is **enabled by default** and dynamically loads `faintly.security.js` on first use.
+- See `README.md` for examples, directives, expression syntax, and security configuration.
 
 ### Guardrails and constraints
 - Keep the bundle tiny; avoid adding runtime deps.
 - Maintain 100% test coverage; do not reduce thresholds or exclude more files.
 - Respect ESM and `.js` extension import rule.
 - Do not introduce Node-only APIs into browser code paths.
+
+### Security module (`src/faintly.security.js`)
+- Provides default XSS protection: attribute sanitization, URL scheme validation, same-origin enforcement.
+- Exported as a separate bundle (`dist/faintly.security.js`) for tree-shaking in opt-out scenarios.
+- Dynamically imported by `directives.js` when `context.security` is undefined.
+- Users can disable (`security: false`), provide custom hooks, or override default configuration.
+- When modifying security:
+  - **Test thoroughly** - security bugs have serious consequences.
+  - Use TDD approach with comprehensive test coverage.
+  - Document changes in `README.md` security section.
+  - Consider backwards compatibility for existing users.
+  - Be conservative about what is allowed by default.
 
 

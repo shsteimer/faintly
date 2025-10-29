@@ -81,4 +81,21 @@ describe('resolveTemplates', () => {
       expect(e.message).to.be.a('string').and.matches(/^Failed to find template/);
     }
   });
+
+  it('throws an error if security blocks the template path', async () => {
+    try {
+      await resolveTemplate({
+        template: {
+          path: '/blocked/path/template.html',
+        },
+        security: {
+          shouldAllowAttribute: () => true,
+          allowIncludePath: () => false,
+        },
+      });
+      expect.fail('exception not thrown');
+    } catch (e) {
+      expect(e.message).to.be.a('string').and.matches(/^Template fetch blocked by security policy/);
+    }
+  });
 });

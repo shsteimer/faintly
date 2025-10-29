@@ -3,6 +3,12 @@ var dp = new DOMParser();
 async function resolveTemplate(context) {
   context.template = context.template || {};
   context.template.path = context.template.path || `${context.codeBasePath}/blocks/${context.blockName}/${context.blockName}.html`;
+  if (context.security && context.template.path) {
+    const allowed = context.security.allowIncludePath(context.template.path, context);
+    if (!allowed) {
+      throw new Error(`Template fetch blocked by security policy: ${context.template.path}`);
+    }
+  }
   const templateId = `faintly-template-${context.template.path}#${context.template.name || ""}`.toLowerCase().replace(/[^0-9a-z]/g, "-");
   let template = document.getElementById(templateId);
   if (!template) {
@@ -69,10 +75,13 @@ async function processAttributesDirective(el, context) {
   el.removeAttribute("data-fly-attributes");
   if (attrsData) {
     Object.entries(attrsData).forEach(([k, v]) => {
+      const name = String(k);
       if (v === void 0) {
-        el.removeAttribute(k);
+        el.removeAttribute(name);
+      } else if (context.security.shouldAllowAttribute(name, v, context)) {
+        el.setAttribute(name, v);
       } else {
-        el.setAttribute(k, v);
+        el.removeAttribute(name);
       }
     });
   }
@@ -81,7 +90,13 @@ async function processAttributes(el, context) {
   await processAttributesDirective(el, context);
   const attrPromises = el.getAttributeNames().filter((attrName) => !attrName.startsWith("data-fly-")).map(async (attrName) => {
     const { updated, updatedText } = await resolveExpressions(el.getAttribute(attrName), context);
-    if (updated) el.setAttribute(attrName, updatedText);
+    if (updated) {
+      if (context.security.shouldAllowAttribute(attrName, updatedText, context)) {
+        el.setAttribute(attrName, updatedText);
+      } else {
+        el.removeAttribute(attrName);
+      }
+    }
   });
   await Promise.all(attrPromises);
 }
@@ -161,6 +176,13 @@ async function processInclude(el, context) {
     templatePath = path;
     templateName = name;
   }
+  if (templatePath) {
+    const allowed = context.security.allowIncludePath(templatePath, context);
+    if (!allowed) {
+      el.removeAttribute("data-fly-include");
+      return true;
+    }
+  }
   const includeContext = {
     ...context,
     template: {
@@ -217,11 +239,31 @@ async function renderTemplate(template, context) {
   processUnwraps(templateClone.content);
   return templateClone;
 }
+async function initializeSecurity(context) {
+  const { security } = context;
+  if (security === false || security === "unsafe") {
+    return {
+      shouldAllowAttribute: (() => true),
+      allowIncludePath: (() => true)
+    };
+  }
+  if (!security) {
+    const securityMod = await import("./faintly.security.js");
+    if (securityMod && securityMod.default) {
+      return securityMod.default();
+    }
+  }
+  return {
+    shouldAllowAttribute: security.shouldAllowAttribute || (() => true),
+    allowIncludePath: security.allowIncludePath || (() => true)
+  };
+}
 async function renderElementWithTemplate(el, template, context) {
   const rendered = await renderTemplate(template, context);
   el.replaceChildren(rendered.content);
 }
 async function renderElement(el, context) {
+  context.security = await initializeSecurity(context);
   const template = await resolveTemplate(context);
   await renderElementWithTemplate(el, template, context);
 }

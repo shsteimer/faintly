@@ -11,10 +11,13 @@ async function processAttributesDirective(el, context) {
   el.removeAttribute('data-fly-attributes');
   if (attrsData) {
     Object.entries(attrsData).forEach(([k, v]) => {
+      const name = String(k);
       if (v === undefined) {
-        el.removeAttribute(k);
+        el.removeAttribute(name);
+      } else if (context.security.shouldAllowAttribute(name, v, context)) {
+        el.setAttribute(name, v);
       } else {
-        el.setAttribute(k, v);
+        el.removeAttribute(name);
       }
     });
   }
@@ -33,7 +36,13 @@ export async function processAttributes(el, context) {
     .filter((attrName) => !attrName.startsWith('data-fly-'))
     .map(async (attrName) => {
       const { updated, updatedText } = await resolveExpressions(el.getAttribute(attrName), context);
-      if (updated) el.setAttribute(attrName, updatedText);
+      if (updated) {
+        if (context.security.shouldAllowAttribute(attrName, updatedText, context)) {
+          el.setAttribute(attrName, updatedText);
+        } else {
+          el.removeAttribute(attrName);
+        }
+      }
     });
   await Promise.all(attrPromises);
 }
@@ -168,6 +177,15 @@ export async function processInclude(el, context) {
     const [path, name] = templateName.split('#');
     templatePath = path;
     templateName = name;
+  }
+
+  // Enforce include path restrictions: same-origin and within allowed base path
+  if (templatePath) {
+    const allowed = context.security.allowIncludePath(templatePath, context);
+    if (!allowed) {
+      el.removeAttribute('data-fly-include');
+      return true;
+    }
   }
 
   const includeContext = {
