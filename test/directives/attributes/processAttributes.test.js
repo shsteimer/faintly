@@ -3,13 +3,16 @@
 
 import { expect } from '@esm-bundle/chai';
 import { processAttributes } from '../../../src/directives.js';
+import { initializeSecurity } from '../../../src/render.js';
 
 describe('processAttributes', () => {
   it('resolves expressions in non data-fly-* attributes', async () => {
     const el = document.createElement('div');
+    const context = { divClass: 'some-class' };
+    context.security = await initializeSecurity(context);
     // eslint-disable-next-line no-template-curly-in-string
     el.setAttribute('class', '${ divClass }');
-    await processAttributes(el, { divClass: 'some-class' });
+    await processAttributes(el, context);
     expect(el.getAttribute('class')).to.equal('some-class');
   });
 
@@ -17,13 +20,15 @@ describe('processAttributes', () => {
     const el = document.createElement('div');
     el.setAttribute('class', 'some-class');
     el.setAttribute('data-fly-attributes', 'divAttrs');
-    await processAttributes(el, {
+    const context = {
       divAttrs: {
         class: 'some-other-class',
         id: 'some-id',
         'aria-label': 'some-label',
       },
-    });
+    };
+    context.security = await initializeSecurity(context);
+    await processAttributes(el, context);
     expect(el.getAttribute('class')).to.equal('some-other-class');
     expect(el.getAttribute('id')).to.equal('some-id');
     expect(el.getAttribute('aria-label')).to.equal('some-label');
@@ -33,18 +38,22 @@ describe('processAttributes', () => {
     const el = document.createElement('div');
     el.setAttribute('class', 'some-class');
     el.setAttribute('data-fly-attributes', 'divAttrs');
-    await processAttributes(el, {
+    const context = {
       divAttrs: {
         class: undefined,
       },
-    });
+    };
+    context.security = await initializeSecurity(context);
+    await processAttributes(el, context);
     expect(el.hasAttribute('class')).to.equal(false);
   });
 
   it('removes attributes directive when complete', async () => {
     const el = document.createElement('div');
     el.setAttribute('data-fly-attributes', '');
-    await processAttributes(el);
+    const context = {};
+    context.security = await initializeSecurity(context);
+    await processAttributes(el, context);
     expect(el.hasAttribute('data-fly-attributes')).to.equal(false);
   });
 
@@ -62,10 +71,12 @@ describe('processAttributes', () => {
         allowIncludePath: () => true,
       };
 
-      await processAttributes(el, {
+      const context = {
         attrs: { allowed: 'value', blocked: 'value' },
         security: customSecurity,
-      });
+      };
+      context.security = await initializeSecurity(context);
+      await processAttributes(el, context);
 
       expect(shouldAllowCalled).to.equal(true);
       expect(el.getAttribute('allowed')).to.equal('value');
@@ -76,11 +87,13 @@ describe('processAttributes', () => {
       const el = document.createElement('div');
       el.setAttribute('data-fly-attributes', 'attrs');
 
-      await processAttributes(el, {
+      const context = {
         // eslint-disable-next-line no-script-url
         attrs: { onclick: 'alert(1)', href: 'javascript:void(0)' },
         security: false,
-      });
+      };
+      context.security = await initializeSecurity(context);
+      await processAttributes(el, context);
 
       expect(el.getAttribute('onclick')).to.equal('alert(1)');
       // eslint-disable-next-line no-script-url
@@ -91,11 +104,13 @@ describe('processAttributes', () => {
       const el = document.createElement('div');
       el.setAttribute('data-fly-attributes', 'attrs');
 
-      await processAttributes(el, {
+      const context = {
         // eslint-disable-next-line no-script-url
         attrs: { onclick: 'alert(1)', href: 'javascript:void(0)' },
         security: 'unsafe',
-      });
+      };
+      context.security = await initializeSecurity(context);
+      await processAttributes(el, context);
 
       expect(el.getAttribute('onclick')).to.equal('alert(1)');
       // eslint-disable-next-line no-script-url
@@ -106,10 +121,12 @@ describe('processAttributes', () => {
       const el = document.createElement('div');
       el.setAttribute('data-fly-attributes', 'attrs');
 
-      // Default security should block event handlers
-      await processAttributes(el, {
+      const context = {
         attrs: { onclick: 'alert(1)', class: 'safe' },
-      });
+      };
+      context.security = await initializeSecurity(context);
+      // Default security should block event handlers
+      await processAttributes(el, context);
 
       expect(el.hasAttribute('onclick')).to.equal(false); // Blocked by default security
       expect(el.getAttribute('class')).to.equal('safe'); // Safe attribute allowed
@@ -125,10 +142,12 @@ describe('processAttributes', () => {
         allowIncludePath: () => true,
       };
 
-      await processAttributes(el, {
+      const context = {
         link: 'blocked-value',
         security: customSecurity,
-      });
+      };
+      context.security = await initializeSecurity(context);
+      await processAttributes(el, context);
 
       expect(el.hasAttribute('href')).to.equal(false);
     });

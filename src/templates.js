@@ -10,6 +10,16 @@ export default async function resolveTemplate(context) {
   context.template = context.template || {};
   context.template.path = context.template.path || `${context.codeBasePath}/blocks/${context.blockName}/${context.blockName}.html`;
 
+  // Enforce template path security before fetching
+  if (context.security && context.template.path) {
+    const allowed = context.security.allowIncludePath(context.template.path, context);
+    if (!allowed) {
+      // eslint-disable-next-line no-console
+      console.warn(`Blocked template fetch outside allowed scope: ${new URL(context.template.path, window.location.origin).href}`);
+      throw new Error(`Template fetch blocked by security policy: ${context.template.path}`);
+    }
+  }
+
   const templateId = `faintly-template-${context.template.path}#${context.template.name || ''}`.toLowerCase().replace(/[^0-9a-z]/g, '-');
   let template = document.getElementById(templateId);
   if (!template) {

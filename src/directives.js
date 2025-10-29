@@ -2,32 +2,6 @@ import { resolveExpression, resolveExpressions } from './expressions.js';
 // eslint-disable-next-line import/no-cycle
 import { processNode, renderElement } from './render.js';
 
-async function getSecurity(context) {
-  const { security } = context;
-
-  // unsafe mode
-  if (security === false || security === 'unsafe') {
-    return {
-      shouldAllowAttribute: (() => true),
-      allowIncludePath: (() => true),
-    };
-  }
-
-  // default mode
-  if (!security) {
-    const securityMod = await import('./faintly.security.js');
-    if (securityMod && securityMod.default) {
-      return securityMod.default();
-    }
-  }
-
-  // custom mode, ensure needed functions are present, use no-ops for missing ones
-  return {
-    shouldAllowAttribute: security.shouldAllowAttribute || (() => true),
-    allowIncludePath: security.allowIncludePath || (() => true),
-  };
-}
-
 async function processAttributesDirective(el, context) {
   if (!el.hasAttribute('data-fly-attributes')) return;
 
@@ -36,12 +10,11 @@ async function processAttributesDirective(el, context) {
 
   el.removeAttribute('data-fly-attributes');
   if (attrsData) {
-    const sec = await getSecurity(context);
     Object.entries(attrsData).forEach(([k, v]) => {
       const name = String(k);
       if (v === undefined) {
         el.removeAttribute(name);
-      } else if (sec.shouldAllowAttribute(name, v, context)) {
+      } else if (context.security.shouldAllowAttribute(name, v, context)) {
         el.setAttribute(name, v);
       } else {
         el.removeAttribute(name);
@@ -64,8 +37,7 @@ export async function processAttributes(el, context) {
     .map(async (attrName) => {
       const { updated, updatedText } = await resolveExpressions(el.getAttribute(attrName), context);
       if (updated) {
-        const sec = await getSecurity(context);
-        if (!sec.shouldAllowAttribute(attrName, updatedText, context)) {
+        if (!context.security.shouldAllowAttribute(attrName, updatedText, context)) {
           el.removeAttribute(attrName);
         } else {
           el.setAttribute(attrName, updatedText);
@@ -209,8 +181,7 @@ export async function processInclude(el, context) {
 
   // Enforce include path restrictions: same-origin and within allowed base path
   if (templatePath) {
-    const sec = await getSecurity(context);
-    const allowed = sec.allowIncludePath(templatePath, context);
+    const allowed = context.security.allowIncludePath(templatePath, context);
     if (!allowed) {
       // eslint-disable-next-line no-console
       console.warn(`Blocked include outside allowed scope: ${new URL(templatePath, window.location.origin).href}`);

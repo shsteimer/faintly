@@ -3,6 +3,13 @@ var dp = new DOMParser();
 async function resolveTemplate(context) {
   context.template = context.template || {};
   context.template.path = context.template.path || `${context.codeBasePath}/blocks/${context.blockName}/${context.blockName}.html`;
+  if (context.security && context.template.path) {
+    const allowed = context.security.allowIncludePath(context.template.path, context);
+    if (!allowed) {
+      console.warn(`Blocked template fetch outside allowed scope: ${new URL(context.template.path, window.location.origin).href}`);
+      throw new Error(`Template fetch blocked by security policy: ${context.template.path}`);
+    }
+  }
   const templateId = `faintly-template-${context.template.path}#${context.template.name || ""}`.toLowerCase().replace(/[^0-9a-z]/g, "-");
   let template = document.getElementById(templateId);
   if (!template) {
@@ -62,37 +69,17 @@ async function processTextExpressions(node, context) {
 }
 
 // src/directives.js
-async function getSecurity(context) {
-  const { security } = context;
-  if (security === false || security === "unsafe") {
-    return {
-      shouldAllowAttribute: (() => true),
-      allowIncludePath: (() => true)
-    };
-  }
-  if (!security) {
-    const securityMod = await import("./faintly.security.js");
-    if (securityMod && securityMod.default) {
-      return securityMod.default();
-    }
-  }
-  return {
-    shouldAllowAttribute: security.shouldAllowAttribute || (() => true),
-    allowIncludePath: security.allowIncludePath || (() => true)
-  };
-}
 async function processAttributesDirective(el, context) {
   if (!el.hasAttribute("data-fly-attributes")) return;
   const attrsExpression = el.getAttribute("data-fly-attributes");
   const attrsData = await resolveExpression(attrsExpression, context);
   el.removeAttribute("data-fly-attributes");
   if (attrsData) {
-    const sec = await getSecurity(context);
     Object.entries(attrsData).forEach(([k, v]) => {
       const name = String(k);
       if (v === void 0) {
         el.removeAttribute(name);
-      } else if (sec.shouldAllowAttribute(name, v, context)) {
+      } else if (context.security.shouldAllowAttribute(name, v, context)) {
         el.setAttribute(name, v);
       } else {
         el.removeAttribute(name);
@@ -105,8 +92,7 @@ async function processAttributes(el, context) {
   const attrPromises = el.getAttributeNames().filter((attrName) => !attrName.startsWith("data-fly-")).map(async (attrName) => {
     const { updated, updatedText } = await resolveExpressions(el.getAttribute(attrName), context);
     if (updated) {
-      const sec = await getSecurity(context);
-      if (!sec.shouldAllowAttribute(attrName, updatedText, context)) {
+      if (!context.security.shouldAllowAttribute(attrName, updatedText, context)) {
         el.removeAttribute(attrName);
       } else {
         el.setAttribute(attrName, updatedText);
@@ -192,8 +178,7 @@ async function processInclude(el, context) {
     templateName = name;
   }
   if (templatePath) {
-    const sec = await getSecurity(context);
-    const allowed = sec.allowIncludePath(templatePath, context);
+    const allowed = context.security.allowIncludePath(templatePath, context);
     if (!allowed) {
       console.warn(`Blocked include outside allowed scope: ${new URL(templatePath, window.location.origin).href}`);
       el.removeAttribute("data-fly-include");
@@ -256,11 +241,31 @@ async function renderTemplate(template, context) {
   processUnwraps(templateClone.content);
   return templateClone;
 }
+async function initializeSecurity(context) {
+  const { security } = context;
+  if (security === false || security === "unsafe") {
+    return {
+      shouldAllowAttribute: (() => true),
+      allowIncludePath: (() => true)
+    };
+  }
+  if (!security) {
+    const securityMod = await import("./faintly.security.js");
+    if (securityMod && securityMod.default) {
+      return securityMod.default();
+    }
+  }
+  return {
+    shouldAllowAttribute: security.shouldAllowAttribute || (() => true),
+    allowIncludePath: security.allowIncludePath || (() => true)
+  };
+}
 async function renderElementWithTemplate(el, template, context) {
   const rendered = await renderTemplate(template, context);
   el.replaceChildren(rendered.content);
 }
 async function renderElement(el, context) {
+  context.security = await initializeSecurity(context);
   const template = await resolveTemplate(context);
   await renderElementWithTemplate(el, template, context);
 }
