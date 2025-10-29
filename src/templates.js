@@ -14,8 +14,6 @@ export default async function resolveTemplate(context) {
   if (context.security && context.template.path) {
     const allowed = context.security.allowIncludePath(context.template.path, context);
     if (!allowed) {
-      // eslint-disable-next-line no-console
-      console.warn(`Blocked template fetch outside allowed scope: ${new URL(context.template.path, window.location.origin).href}`);
       throw new Error(`Template fetch blocked by security policy: ${context.template.path}`);
     }
   }

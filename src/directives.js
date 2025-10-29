@@ -37,10 +37,10 @@ export async function processAttributes(el, context) {
     .map(async (attrName) => {
       const { updated, updatedText } = await resolveExpressions(el.getAttribute(attrName), context);
       if (updated) {
-        if (!context.security.shouldAllowAttribute(attrName, updatedText, context)) {
-          el.removeAttribute(attrName);
-        } else {
+        if (context.security.shouldAllowAttribute(attrName, updatedText, context)) {
           el.setAttribute(attrName, updatedText);
+        } else {
+          el.removeAttribute(attrName);
         }
       }
     });
@@ -183,8 +183,6 @@ export async function processInclude(el, context) {
   if (templatePath) {
     const allowed = context.security.allowIncludePath(templatePath, context);
     if (!allowed) {
-      // eslint-disable-next-line no-console
-      console.warn(`Blocked include outside allowed scope: ${new URL(templatePath, window.location.origin).href}`);
       el.removeAttribute('data-fly-include');
       return true;
     }

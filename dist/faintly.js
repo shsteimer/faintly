@@ -6,7 +6,6 @@ async function resolveTemplate(context) {
   if (context.security && context.template.path) {
     const allowed = context.security.allowIncludePath(context.template.path, context);
     if (!allowed) {
-      console.warn(`Blocked template fetch outside allowed scope: ${new URL(context.template.path, window.location.origin).href}`);
       throw new Error(`Template fetch blocked by security policy: ${context.template.path}`);
     }
   }
@@ -92,10 +91,10 @@ async function processAttributes(el, context) {
   const attrPromises = el.getAttributeNames().filter((attrName) => !attrName.startsWith("data-fly-")).map(async (attrName) => {
     const { updated, updatedText } = await resolveExpressions(el.getAttribute(attrName), context);
     if (updated) {
-      if (!context.security.shouldAllowAttribute(attrName, updatedText, context)) {
-        el.removeAttribute(attrName);
-      } else {
+      if (context.security.shouldAllowAttribute(attrName, updatedText, context)) {
         el.setAttribute(attrName, updatedText);
+      } else {
+        el.removeAttribute(attrName);
       }
     }
   });
@@ -180,7 +179,6 @@ async function processInclude(el, context) {
   if (templatePath) {
     const allowed = context.security.allowIncludePath(templatePath, context);
     if (!allowed) {
-      console.warn(`Blocked include outside allowed scope: ${new URL(templatePath, window.location.origin).href}`);
       el.removeAttribute("data-fly-include");
       return true;
     }
