@@ -4,9 +4,9 @@ This document outlines planned improvements to make Faintly easier to use for de
 
 ## Implementation Priority
 
-### ✅ To Implement
+### ✅ Completed
 
-#### 1. Standardize Expression Syntax (Refined)
+#### 1. Standardize Expression Syntax (Refined) - ✅ IMPLEMENTED
 Make `${}` optional in `data-fly-*` directives for consistency with HTL.
 
 **Current behavior:**
@@ -44,7 +44,20 @@ Make `${}` optional in `data-fly-*` directives for consistency with HTL.
 - Update tests to cover both syntaxes in directives
 - Update README.md to document both syntaxes are supported in directives
 
+**Implementation Results:**
+- ✅ Added `unwrapExpression()` function in `src/expressions.js`
+- ✅ Applied unwrapping to all directive processors: `processTest`, `processRepeat`, `processContent`, `processAttributes`, `resolveUnwrap`
+- ✅ Added 13 comprehensive tests for `unwrapExpression()`
+- ✅ Added 9 integration tests for `${}` syntax across all directive types
+- ✅ Updated README Expressions section with clear documentation
+- ✅ 117 tests passing with 100% coverage maintained
+- ✅ Bundle size: 2729 bytes core (actually 1 byte smaller!)
+- ✅ All directives now support both syntaxes: `data-fly-test="condition"` and `data-fly-test="${condition}"`
+- ✅ Committed in commit `1a21b8f`
+
 ---
+
+### 🚧 To Implement
 
 #### 2. Add HTL Migration Documentation
 Create a dedicated doc linked from README.md with side-by-side comparisons.
@@ -232,7 +245,7 @@ await renderBlock(block, {
 
 ## Implementation Order
 
-1. **Standardize expression syntax** (#1) - Foundational change, affects everything
+1. ✅ **Standardize expression syntax** (#1) - COMPLETED
 2. **Add migration documentation** (#2) - Document completed features
 
 ## Testing Strategy
@@ -266,7 +279,7 @@ await renderBlock(block, {
 - **Directive prefix**: `data-sly-*` vs `data-fly-*`
 - **Backend integration**: HTL uses `data-sly-use`, Faintly uses context object
 - **Iteration**: `data-sly-list` vs `data-fly-repeat`
-- **Expression syntax**: HTL always uses `${}`, Faintly varies by context (for now)
+- **Expression syntax**: HTL always uses `${}`, Faintly now supports both `${}` and bare expressions in directives
 
 ### Target Outcome
 Make Faintly feel natural to HTL developers while maintaining its lightweight, client-side focus.
