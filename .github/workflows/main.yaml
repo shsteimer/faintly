@@ -22,15 +22,7 @@ jobs:
     - run: npm ci
     - run: npm run lint
     - run: npm run test
-    - run: npm run build
-    - name: Check gzipped dist size
-      run: |
-        gz_size=$(gzip -c dist/faintly.js | wc -c)
-        echo "Gzipped size: ${gz_size} bytes"
-        if [ "$gz_size" -gt 5120 ]; then
-          echo "Error: dist/faintly.js gzipped size ${gz_size} exceeds 5KB (5120 bytes)"
-          exit 1
-        fi
+    - run: npm run build:strict
     - name: Commit dist if changed
       run: |
         git config user.name "github-actions[bot]"

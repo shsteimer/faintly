@@ -30,8 +30,13 @@ export async function processNode(node, context) {
 
     await processAttributes(node, context);
 
-    processChildren = (await processContent(node, context))
-      || (await processInclude(node, context)) || true;
+    // Determine child processing based on content/include directives:
+    // 1) If content ran, skip include and still process children
+    // 2) If content did not run but include did, skip processing children (already rendered)
+    // 3) If neither ran, process children
+    const hadContent = await processContent(node, context);
+    const hadInclude = hadContent ? false : await processInclude(node, context);
+    processChildren = !hadInclude;
 
     await resolveUnwrap(node, context);
   } else if (node.nodeType === Node.TEXT_NODE) {

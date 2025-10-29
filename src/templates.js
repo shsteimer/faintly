@@ -10,7 +10,7 @@ export default async function resolveTemplate(context) {
   context.template = context.template || {};
   context.template.path = context.template.path || `${context.codeBasePath}/blocks/${context.blockName}/${context.blockName}.html`;
 
-  const templateId = `faintly-template-${context.template.path}#${context.template.name || ''}`.toLowerCase().replace(/[^0-9a-z]/gi, '-');
+  const templateId = `faintly-template-${context.template.path}#${context.template.name || ''}`.toLowerCase().replace(/[^0-9a-z]/g, '-');
   let template = document.getElementById(templateId);
   if (!template) {
     const resp = await fetch(context.template.path);
@@ -22,7 +22,7 @@ export default async function resolveTemplate(context) {
 
     templateDom.querySelectorAll('template').forEach((t) => {
       const name = t.getAttribute('data-fly-name') || '';
-      t.id = `faintly-template-${context.template.path}#${name}`.toLowerCase().replace(/[^0-9a-z]/gi, '-');
+      t.id = `faintly-template-${context.template.path}#${name}`.toLowerCase().replace(/[^0-9a-z]/g, '-');
 
       document.body.append(t);
     });

@@ -3,7 +3,7 @@ var dp = new DOMParser();
 async function resolveTemplate(context) {
   context.template = context.template || {};
   context.template.path = context.template.path || `${context.codeBasePath}/blocks/${context.blockName}/${context.blockName}.html`;
-  const templateId = `faintly-template-${context.template.path}#${context.template.name || ""}`.toLowerCase().replace(/[^0-9a-z]/gi, "-");
+  const templateId = `faintly-template-${context.template.path}#${context.template.name || ""}`.toLowerCase().replace(/[^0-9a-z]/g, "-");
   let template = document.getElementById(templateId);
   if (!template) {
     const resp = await fetch(context.template.path);
@@ -12,7 +12,7 @@ async function resolveTemplate(context) {
     const templateDom = dp.parseFromString(markup, "text/html");
     templateDom.querySelectorAll("template").forEach((t) => {
       const name = t.getAttribute("data-fly-name") || "";
-      t.id = `faintly-template-${context.template.path}#${name}`.toLowerCase().replace(/[^0-9a-z]/gi, "-");
+      t.id = `faintly-template-${context.template.path}#${name}`.toLowerCase().replace(/[^0-9a-z]/g, "-");
       document.body.append(t);
     });
   }
@@ -198,7 +198,9 @@ async function processNode(node, context) {
     const repeated = await processRepeat(node, context);
     if (repeated) return;
     await processAttributes(node, context);
-    processChildren = await processContent(node, context) || await processInclude(node, context) || true;
+    const hadContent = await processContent(node, context);
+    const hadInclude = hadContent ? false : await processInclude(node, context);
+    processChildren = !hadInclude;
     await resolveUnwrap(node, context);
   } else if (node.nodeType === Node.TEXT_NODE) {
     await processTextExpressions(node, context);
