@@ -77,102 +77,24 @@ When in a repeat loop, it will also include:
 
 ## Security
 
-Faintly includes built-in security features to help protect against XSS (Cross-Site Scripting) attacks. By default, security is **enabled** and provides:
-
-* **Attribute sanitization** - Blocks dangerous attributes like event handlers (`onclick`, `onerror`, etc.) and `srcdoc`
-* **URL scheme validation** - Restricts URLs in attributes like `href` and `src` to safe schemes (`http:`, `https:`, `mailto:`, `tel:`)
-* **Same-origin enforcement** - Template includes are restricted to same-origin URLs only
-
-### Default Security
-
-When you call `renderBlock()` without a security context, default security is automatically applied:
+Faintly includes built-in XSS protection that is **enabled by default**.
 
 ```javascript
-await renderBlock(block); // Default security enabled
+await renderBlock(block); // Security automatically enabled
 ```
 
-The default security module (`dist/faintly.security.js`) is dynamically loaded on first use.
-
-### Custom Security
-
-For more control, you can provide a custom security object with `shouldAllowAttribute` and `allowIncludePath` hooks:
-
-```javascript
-await renderBlock(block, {
-  security: {
-    shouldAllowAttribute(attrName, value) {
-      // Return true to allow the attribute, false to block it
-      // Your custom logic here
-      return true;
-    },
-    allowIncludePath(templatePath) {
-      // Return true to allow the template include, false to block it
-      // Your custom logic here
-      return true;
-    },
-  },
-});
-```
-
-You can also use the default security module and override specific configuration:
-
-```javascript
-import createSecurity from './scripts/faintly.security.js';
-
-await renderBlock(block, {
-  security: createSecurity({
-    // Add 'data:' URLs to allowed schemes
-    allowedUrlSchemes: ['http:', 'https:', 'mailto:', 'tel:', 'data:'],
-    // Block additional attributes
-    blockedAttributes: ['srcdoc', 'sandbox'],
-  }),
-});
-```
-
-### Security Configuration Options
-
-The default security module accepts the following configuration:
-
-* `blockedAttributePatterns` (Array<RegExp>) - Regex patterns for blocked attribute names (default: `/^on/i` blocks all event handlers)
-* `blockedAttributes` (Array<string>) - Specific attribute names to block (default: `['srcdoc']`)
-* `urlAttributes` (Array<string>) - Attributes that contain URLs to validate (default: `['href', 'src', 'action', 'formaction', 'xlink:href']`)
-* `allowedUrlSchemes` (Array<string>) - Allowed URL schemes; relative URLs are always allowed (default: `['http:', 'https:', 'mailto:', 'tel:']`)
-
-
-### Disabling Security (Unsafe Mode)
-
-You can disable security if needed. **THIS IS NOT RECOMMENDED**
-
-
-> [!CAUTION]  
-> **THIS IS NOT RECOMMENDED**  and bypasses all XSS protection.
-
-```javascript
-await renderBlock(block, {
-  security: false, // or 'unsafe'
-});
-```
-
-
-### Trust Boundaries
-
-It's important to understand what Faintly's security does and doesn't protect:
-
-**Protected:**
-- ✅ Dangerous attributes (event handlers, `srcdoc`)
-- ✅ Malicious URL schemes (`javascript:`, `data:` by default)
+**What's protected:**
+- ✅ Dangerous attributes (event handlers like `onclick`, `onerror`, etc.)
+- ✅ Malicious URL schemes (`javascript:`, `data:`, `vbscript:`, `file:`)
 - ✅ Cross-origin template includes
+- ✅ HTML strings treated as plain text (not parsed as HTML)
 
-**Trusted (by design):**
-- The rendering context you provide is fully trusted
-- Templates fetched from your same-origin are trusted
-- DOM Node objects provided in context are inserted directly
+**What's NOT protected (by design):**
+- ⚠️ **Context data** - The rendering context is fully trusted
+- ⚠️ **Pre-built DOM elements** - Elements passed through context are inserted as-is
+- ⚠️ **`utils:eval()` expressions** - JavaScript evaluation requires `unsafe-eval` CSP and trusts context data
 
-> [!WARNING]  
-> **Be extremely careful when adding user-supplied data to the rendering context.** URL parameters, form inputs, cookies, and other user-controlled data should be validated and sanitized before adding to the context. The context is fully trusted, so untrusted data placed in it can bypass security protections.
-
-> [!TIP]  
-> Security works best in layers. Faintly's security helps prevent common XSS vectors, but you should also: validate and sanitize user input before adding it to context, use Content Security Policy headers, and follow secure coding practices.
+For detailed information about the security model, configuration options, custom security hooks, and best practices, see **[Security Documentation](./docs/SECURITY.md)**.
 
 ## Directives
 
