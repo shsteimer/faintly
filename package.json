@@ -15,7 +15,8 @@
     "build:watch": "node scripts/build.mjs --watch",
     "check:size": "node scripts/build.mjs --check-size",
     "check:size:strict": "node scripts/build.mjs --check-size --strict",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "verify": "npm run clean && npm run build:strict && npm run lint && npm test"
   },
   "author": "Sean Steimer",
   "license": "Apache-2.0",
