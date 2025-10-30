@@ -180,6 +180,9 @@ When a small bits of logic are required, you can use `utils:eval()` to evaluate 
 - **Use `utils:eval()`** for simple comparisons, formatting, or inline expressions
 - Context functions are generally safer and more maintainable for complex operations
 
+> [!NOTE]
+> `resolveExpressions()` stops at the first closing `}`. `utils:eval()` expressions that contain extra braces—like template literals (`` `Hello ${user.name}` ``) or object literals—will render incorrectly.
+
 ## Security
 
 Faintly includes built-in XSS protections with sensible defaults that are automatically enabled
