@@ -181,7 +181,10 @@ When a small bits of logic are required, you can use `utils:eval()` to evaluate 
 - Context functions are generally safer and more maintainable for complex operations
 
 > [!NOTE]
-> `resolveExpressions()` stops at the first closing `}`. `utils:eval()` expressions that contain extra braces—like template literals (`` `Hello ${user.name}` ``) or object literals—will render incorrectly.
+> While processing text nodes, expression parsing stops at the first closing `}`. `utils:eval()` expressions that include additional braces—such as template literals (`` `Hello ${user.name}` ``) will not be parsed correctly.
+
+> [!TIP]
+> Prefer direct expressions for string interpolation: `<div>Hello ${user.name}</div>`.
 
 ## Security
 
