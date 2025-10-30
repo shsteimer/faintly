@@ -181,7 +181,7 @@ await renderBlock(block, {
 
 Always sanitize user input before adding it to the context. **Adding any user-input to context to be used by faintly without first validating and sanitizing is inherently UNSAFE.**
 
-> [!DANGER]
+> [!CAUTION]
 > **Never allow user input to become part of templates/HTML.** User input must ONLY go into the context, never into template strings, innerHTML, or attribute values that will be rendered. If users can control template content, they can inject expressions like `${utils:eval(...)}` to execute arbitrary code.
 
 **Guidelines:**
