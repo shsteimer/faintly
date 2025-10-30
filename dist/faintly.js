@@ -269,10 +269,10 @@ async function initializeSecurity(context) {
       return securityMod.default();
     }
   }
-  return {
-    shouldAllowAttribute: security.shouldAllowAttribute || (() => true),
-    allowIncludePath: security.allowIncludePath || (() => true)
-  };
+  if (typeof security.shouldAllowAttribute !== "function" || typeof security.allowIncludePath !== "function") {
+    throw new Error("security.shouldAllowAttribute and security.allowIncludePath must be functions");
+  }
+  return security;
 }
 async function renderElementWithTemplate(el, template, context) {
   const rendered = await renderTemplate(template, context);

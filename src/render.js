@@ -90,11 +90,12 @@ export async function initializeSecurity(context) {
     }
   }
 
-  // custom mode, ensure needed functions are present, use no-ops for missing ones
-  return {
-    shouldAllowAttribute: security.shouldAllowAttribute || (() => true),
-    allowIncludePath: security.allowIncludePath || (() => true),
-  };
+  // custom mode
+  if (typeof security.shouldAllowAttribute !== 'function' || typeof security.allowIncludePath !== 'function') {
+    throw new Error('security.shouldAllowAttribute and security.allowIncludePath must be functions');
+  }
+
+  return security;
 }
 
 /**
