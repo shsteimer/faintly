@@ -179,15 +179,6 @@ export async function processInclude(el, context) {
     templateName = name;
   }
 
-  // Enforce include path restrictions: same-origin and within allowed base path
-  if (templatePath) {
-    const allowed = context.security.allowIncludePath(templatePath, context);
-    if (!allowed) {
-      el.removeAttribute('data-fly-include');
-      return true;
-    }
-  }
-
   const includeContext = {
     ...context,
     template: {

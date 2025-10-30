@@ -32,7 +32,7 @@ Faintly supports three security modes:
 
 | Mode | Description | Use Case | Documentation |
 |------|-------------|----------|---------------|
-| **Default** (Recommended) | Built-in XSS protection with sensible defaults | Most applications | [Default Security](#default-security) |
+| **Default** | Built-in XSS protection with sensible defaults | Most applications | [Default Security](#default-security) |
 | **Custom** | Override defaults or provide custom security hooks | Fine-grained control or specific requirements | [Configuration](#configuration), [Custom Security Hooks](#custom-security-hooks) |
 | **Unsafe** (Not Recommended) | Security disabled | Fully trusted environments only | [Disabling Security](#disabling-security-not-recommended) |
 
@@ -57,7 +57,7 @@ The following are considered **trusted** and NOT sanitized:
 - **JavaScript functions** in your context
 
 > [!WARNING]
-> **The rendering context is fully trusted.** If you add user-supplied data (URL parameters, form inputs, cookies, etc.) to the context, you must validate and sanitize it first. Untrusted data in the context can bypass security protections.
+> **The rendering context is fully trusted.** If you add user-supplied data (URL parameters, form inputs, cookies, etc.) to the context, you must validate and sanitize first. Untrusted data in the context can bypass security protections.
 
 ### String Content Handling
 
@@ -72,7 +72,7 @@ context.content = '<script>alert("XSS")</script>';
 const script = document.createElement('script');
 script.textContent = 'alert("XSS")';
 context.content = script;
-// Result: script element is inserted (though inline scripts won't execute via DOM manipulation)
+// Result: script element is inserted as is
 ```
 
 ## Default Security

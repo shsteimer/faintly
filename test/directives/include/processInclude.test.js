@@ -107,10 +107,15 @@ describe('processInclude', () => {
         security: customSecurity,
       };
       context.security = await initializeSecurity(context);
-      await processInclude(el, context);
+      let exceptionThrown = false;
+      try {
+        await processInclude(el, context);
+      } catch (e) {
+        exceptionThrown = e;
+      }
 
-      expect(el.hasAttribute('data-fly-include')).to.equal(false);
-      expect(el.childNodes.length).to.equal(0);
+      expect(exceptionThrown).to.be.an.instanceOf(Error);
+      expect(exceptionThrown.message).to.equal('Template fetch blocked by security policy: /blocked/path/template.html');
     });
 
     it('allows includes in unsafe mode with security: false', async () => {

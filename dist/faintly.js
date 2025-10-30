@@ -192,13 +192,6 @@ async function processInclude(el, context) {
     templatePath = path;
     templateName = name;
   }
-  if (templatePath) {
-    const allowed = context.security.allowIncludePath(templatePath, context);
-    if (!allowed) {
-      el.removeAttribute("data-fly-include");
-      return true;
-    }
-  }
   const includeContext = {
     ...context,
     template: {
