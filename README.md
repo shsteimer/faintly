@@ -8,6 +8,10 @@ I've always liked the developer ergonomics (autocomplete, etc.) and separation o
 
 I've experimented with other existing libraries (ejs templates, etc.) but wanted something simple and purpose built.
 
+## Migrating from HTL/Sightly?
+
+If you're coming from Adobe Experience Manager's HTL (HTML Template Language), check out **[HTL Migration Guide](./docs/HTL_MIGRATION.md)** for side-by-side comparisons.
+
 ## Getting Started
 
 1. Copy the `/dist/faintly.js` and `/dist/faintly.security.js` files to the scripts directory of your project
