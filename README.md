@@ -8,6 +8,10 @@ I've always liked the developer ergonomics (autocomplete, etc.) and separation o
 
 I've experimented with other existing libraries (ejs templates, etc.) but wanted something simple and purpose built.
 
+## Migrating from HTL/Sightly?
+
+If you're coming from Adobe Experience Manager's HTL (HTML Template Language), check out **[HTL Migration Guide](./docs/HTL_MIGRATION.md)** for side-by-side comparisons.
+
 ## Getting Started
 
 1. Copy the `/dist/faintly.js` and `/dist/faintly.security.js` files to the scripts directory of your project
@@ -73,102 +77,28 @@ When in a repeat loop, it will also include:
 
 ## Security
 
-Faintly includes built-in security features to help protect against XSS (Cross-Site Scripting) attacks. By default, security is **enabled** and provides:
-
-* **Attribute sanitization** - Blocks dangerous attributes like event handlers (`onclick`, `onerror`, etc.) and `srcdoc`
-* **URL scheme validation** - Restricts URLs in attributes like `href` and `src` to safe schemes (`http:`, `https:`, `mailto:`, `tel:`)
-* **Same-origin enforcement** - Template includes are restricted to same-origin URLs only
-
-### Default Security
-
-When you call `renderBlock()` without a security context, default security is automatically applied:
+Faintly includes built-in XSS protection that is **enabled by default**.
 
 ```javascript
-await renderBlock(block); // Default security enabled
+await renderBlock(block); // Security automatically enabled
 ```
 
-The default security module (`dist/faintly.security.js`) is dynamically loaded on first use.
-
-### Custom Security
-
-For more control, you can provide a custom security object with `shouldAllowAttribute` and `allowIncludePath` hooks:
-
-```javascript
-await renderBlock(block, {
-  security: {
-    shouldAllowAttribute(attrName, value) {
-      // Return true to allow the attribute, false to block it
-      // Your custom logic here
-      return true;
-    },
-    allowIncludePath(templatePath) {
-      // Return true to allow the template include, false to block it
-      // Your custom logic here
-      return true;
-    },
-  },
-});
-```
-
-You can also use the default security module and override specific configuration:
-
-```javascript
-import createSecurity from './scripts/faintly.security.js';
-
-await renderBlock(block, {
-  security: createSecurity({
-    // Add 'data:' URLs to allowed schemes
-    allowedUrlSchemes: ['http:', 'https:', 'mailto:', 'tel:', 'data:'],
-    // Block additional attributes
-    blockedAttributes: ['srcdoc', 'sandbox'],
-  }),
-});
-```
-
-### Security Configuration Options
-
-The default security module accepts the following configuration:
-
-* `blockedAttributePatterns` (Array<RegExp>) - Regex patterns for blocked attribute names (default: `/^on/i` blocks all event handlers)
-* `blockedAttributes` (Array<string>) - Specific attribute names to block (default: `['srcdoc']`)
-* `urlAttributes` (Array<string>) - Attributes that contain URLs to validate (default: `['href', 'src', 'action', 'formaction', 'xlink:href']`)
-* `allowedUrlSchemes` (Array<string>) - Allowed URL schemes; relative URLs are always allowed (default: `['http:', 'https:', 'mailto:', 'tel:']`)
-
-
-### Disabling Security (Unsafe Mode)
-
-You can disable security if needed. **THIS IS NOT RECOMMENDED**
-
-
-> [!CAUTION]  
-> **THIS IS NOT RECOMMENDED**  and bypasses all XSS protection.
-
-```javascript
-await renderBlock(block, {
-  security: false, // or 'unsafe'
-});
-```
-
-
-### Trust Boundaries
-
-It's important to understand what Faintly's security does and doesn't protect:
-
-**Protected:**
-- ✅ Dangerous attributes (event handlers, `srcdoc`)
-- ✅ Malicious URL schemes (`javascript:`, `data:` by default)
+**What's protected:**
+- ✅ Dangerous attributes (event handlers like `onclick`, `onerror`, etc.)
+- ✅ Malicious URL schemes (`javascript:`, `data:`, `vbscript:`, `file:`)
 - ✅ Cross-origin template includes
+- ✅ HTML strings treated as plain text (not parsed as HTML)
 
-**Trusted (by design):**
-- The rendering context you provide is fully trusted
-- Templates fetched from your same-origin are trusted
-- DOM Node objects provided in context are inserted directly
+**What's NOT protected (by design):**
+- ⚠️ **Context data** - The rendering context is fully trusted
+- ⚠️ **Pre-built DOM elements** - Elements passed through context are inserted as-is
+- ⚠️ **`utils:eval()` expressions** - JavaScript evaluation requires `unsafe-eval` CSP and trusts context data
+- ⚠️ **Templates/HTML** - Templates are trusted. Never allow user input in templates, innerHTML, or setAttribute - expressions like `${...}` will be evaluated
 
-> [!WARNING]  
-> **Be extremely careful when adding user-supplied data to the rendering context.** URL parameters, form inputs, cookies, and other user-controlled data should be validated and sanitized before adding to the context. The context is fully trusted, so untrusted data placed in it can bypass security protections.
+> [!DANGER]
+> **Never allow user input to become part of templates or HTML.** User input must ONLY go into the context. If users can control template content, they can inject `${utils:eval(...)}` to execute arbitrary code.
 
-> [!TIP]  
-> Security works best in layers. Faintly's security helps prevent common XSS vectors, but you should also: validate and sanitize user input before adding it to context, use Content Security Policy headers, and follow secure coding practices.
+For detailed information about the security model, configuration options, custom security hooks, and best practices, see **[Security Documentation](./docs/SECURITY.md)**.
 
 ## Directives
 
@@ -197,8 +127,81 @@ Faintly supports the following directives.
 
 Faintly supports a simple expression syntax for resolving data from the rendering context. It supports only object dot-notation, but will call (optionally async) functions as well. This means that if you need to do something that can't be expressed in dot-notation, then you need to define a custom function for it, and add that function to the rendering context.
 
-For `data-fly-include`, HTML text, and normal attributes, wrap your expression in `${}`.
+**In `data-fly-*` directive attributes:**
+- Both bare expressions and `${}` wrapped expressions are supported
+- `data-fly-test="condition"` and `data-fly-test="${condition}"` both work
 
-Escaping: use a leading backslash to prevent evaluation of an expression in text/attributes, e.g. `\${some.value}` will remain literal `${some.value}`.
+**In `data-fly-include`, HTML text, and normal attributes:**
+- You must wrap your expression in `${}`
+- Example: `<div class="${className}">`, `<p>Hello ${user.name}</p>`
 
-In all other `data-fly-*` attributes, just set the expression directly as the attribute value, no wrapping needed.
+**Escaping:**
+- Use a leading backslash to prevent evaluation of an expression in text/attributes
+- Example: `\${some.value}` will remain literal `${some.value}`
+
+### JavaScript Expression Evaluation with `utils:eval()`
+
+> [!CAUTION]
+> **⚠️ This feature uses JavaScript's `Function` constructor (similar to `eval`)**
+>
+> - Requires Content Security Policy with `'unsafe-eval'` directive
+> - **Has full access to context AND browser globals** (`window`, `document`, etc.)
+> - An attacker with control over context data could craft expressions like `utils:eval(window.location='https://evil.com')` or `utils:eval(document.cookie)`
+> - **Never put untrusted user input in the context** when using `utils:eval()`
+> - If your CSP blocks `unsafe-eval`, this feature won't work
+>
+> Use `utils:eval()` thoughtfully. For complex logic, context functions are safer and more maintainable.
+
+When a bit more logic is required, you canuse `utils:eval()` to evaluate JavaScript expressions. Some examples:
+
+```html
+<!-- Comparisons -->
+<div data-fly-test="utils:eval(count > 5)">More than 5</div>
+<div data-fly-test="utils:eval(status === 'active')">Active</div>
+
+<!-- Logical operators -->
+<div data-fly-test="utils:eval(isAdmin || isModerator)">Admin or mod</div>
+<div data-fly-test="utils:eval(isValid && isActive)">Valid and active</div>
+
+<!-- Ternary operator -->
+<div>${utils:eval(showCount ? count : 'N/A')}</div>
+<div class="${utils:eval(isActive ? 'active' : 'inactive')}">Status</div>
+
+<!-- Method calls with arguments -->
+<div>${utils:eval(items.join(', '))}</div>
+<div>${utils:eval(name.substring(0, 10))}</div>
+
+<!-- String concatenation -->
+<div>${utils:eval('Hello, ' + user.name)}</div>
+
+<!-- Arithmetic -->
+<div>${utils:eval(price * quantity)}</div>
+
+<!-- Complex expressions -->
+<div data-fly-test="utils:eval((count > 5 && !isDisabled) || isAdmin)">Complex logic</div>
+```
+
+**What works WITHOUT `utils:eval()`:**
+
+```html
+<!-- Simple property paths -->
+<div>${user.name}</div>
+<div>${user.profile.email}</div>
+
+<!-- Array length -->
+<div>${items.length}</div>
+
+<!-- Array access by numeric index using dot notation -->
+<div>${items.0}</div>
+<div>${items.1}</div>
+
+<!-- Function calls without arguments (auto-called by Faintly) -->
+<div>${user.getName}</div>
+<div>${text.trim}</div>
+```
+
+**When to Use `utils:eval()` vs Context Functions:**
+
+- **Use context functions** for complex logic, API calls, or data transformations
+- **Use `utils:eval()`** for simple comparisons, formatting, or inline expressions
+- Context functions are generally safer and more maintainable for complex operations

@@ -98,4 +98,39 @@ describe('processRepeat', () => {
       expect(repeatedEl.hasAttribute('data-fly-repeat')).to.equal(false);
     });
   });
+
+  it('supports ${} wrapped expressions', async () => {
+    const el = document.createElement('div');
+    el.setAttribute('data-fly-repeat', '${array}');
+    el.textContent = 'Hello, ${item}!';
+
+    const parent = document.createElement('div');
+    parent.append(el);
+
+    const repeated = await processRepeat(el, {
+      array: ['bob', 'alice', 'charlie'],
+    });
+    expect(repeated).to.be.true;
+    expect(el.parentNode).to.equal(null);
+    expect(parent.children[0].textContent).to.equal('Hello, bob!');
+    expect(parent.children[1].textContent).to.equal('Hello, alice!');
+    expect(parent.children[2].textContent).to.equal('Hello, charlie!');
+  });
+
+  it('supports ${} wrapped expressions with custom context name', async () => {
+    const el = document.createElement('div');
+    el.setAttribute('data-fly-repeat.name', '${array}');
+    el.textContent = 'Hello, ${name}!';
+
+    const parent = document.createElement('div');
+    parent.append(el);
+
+    const repeated = await processRepeat(el, {
+      array: ['bob', 'alice', 'charlie'],
+    });
+    expect(repeated).to.be.true;
+    expect(parent.children[0].textContent).to.equal('Hello, bob!');
+    expect(parent.children[1].textContent).to.equal('Hello, alice!');
+    expect(parent.children[2].textContent).to.equal('Hello, charlie!');
+  });
 });

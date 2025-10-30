@@ -28,10 +28,26 @@ async function resolveTemplate(context) {
 }
 
 // src/expressions.js
+function evaluate(expr, context) {
+  const fn = new Function("ctx", `with(ctx) { return ${expr}; }`);
+  return fn(context);
+}
+function unwrapExpression(expression) {
+  const trimmed = expression.trim();
+  if (trimmed.startsWith("${") && trimmed.endsWith("}")) {
+    return trimmed.slice(2, -1).trim();
+  }
+  return expression;
+}
 async function resolveExpression(expression, context) {
+  const trimmedExpression = expression.trim();
+  if (trimmedExpression.startsWith("utils:eval(") && trimmedExpression.endsWith(")")) {
+    const expr = trimmedExpression.slice(11, -1);
+    return evaluate(expr, context);
+  }
   let resolved = context;
   let previousResolvedValue;
-  const parts = expression.split(".");
+  const parts = trimmedExpression.split(".");
   for (let i = 0; i < parts.length; i += 1) {
     if (typeof resolved === "undefined") break;
     const part = parts[i];
@@ -45,7 +61,7 @@ async function resolveExpression(expression, context) {
   return resolved;
 }
 async function resolveExpressions(str, context) {
-  const regexp = /(\\)?\${([a-z0-9\\.\s]+)}/gi;
+  const regexp = /(\\)?\${([^}]+)}/gi;
   const promises = [];
   str.replaceAll(regexp, (match, escapeChar, expression) => {
     const replacementPromise = escapeChar ? Promise.resolve(match.slice(1)) : resolveExpression(expression.trim(), context);
@@ -70,7 +86,7 @@ async function processTextExpressions(node, context) {
 // src/directives.js
 async function processAttributesDirective(el, context) {
   if (!el.hasAttribute("data-fly-attributes")) return;
-  const attrsExpression = el.getAttribute("data-fly-attributes");
+  const attrsExpression = unwrapExpression(el.getAttribute("data-fly-attributes"));
   const attrsData = await resolveExpression(attrsExpression, context);
   el.removeAttribute("data-fly-attributes");
   if (attrsData) {
@@ -105,7 +121,7 @@ async function processTest(el, context) {
   if (!testAttrName) return true;
   const nameParts = testAttrName.split(".");
   const contextName = nameParts[1] || "";
-  const testExpression = el.getAttribute(testAttrName);
+  const testExpression = unwrapExpression(el.getAttribute(testAttrName));
   const testData = await resolveExpression(testExpression, context);
   el.removeAttribute(testAttrName);
   const testResult = testAttrName.startsWith("data-fly-not") ? !testData : !!testData;
@@ -117,7 +133,7 @@ async function processTest(el, context) {
 }
 async function processContent(el, context) {
   if (!el.hasAttribute("data-fly-content")) return false;
-  const contentExpression = el.getAttribute("data-fly-content");
+  const contentExpression = unwrapExpression(el.getAttribute("data-fly-content"));
   const content = await resolveExpression(contentExpression, context);
   el.removeAttribute("data-fly-content");
   if (content !== void 0) {
@@ -139,7 +155,7 @@ async function processRepeat(el, context) {
   if (!repeatAttrName) return false;
   const nameParts = repeatAttrName.split(".");
   const contextName = nameParts[1] || "item";
-  const repeatExpression = el.getAttribute(repeatAttrName);
+  const repeatExpression = unwrapExpression(el.getAttribute(repeatAttrName));
   const arr = await resolveExpression(repeatExpression, context);
   if (!arr || Object.keys(arr).length === 0) {
     el.remove();
@@ -195,9 +211,9 @@ async function processInclude(el, context) {
 }
 async function resolveUnwrap(el, context) {
   if (!el.hasAttribute("data-fly-unwrap")) return;
-  const unwrapExpression = el.getAttribute("data-fly-unwrap");
-  if (unwrapExpression) {
-    const unwrapVal = !!await resolveExpression(unwrapExpression, context);
+  const unwrapExpr = el.getAttribute("data-fly-unwrap");
+  if (unwrapExpr) {
+    const unwrapVal = !!await resolveExpression(unwrapExpression(unwrapExpr), context);
     if (!unwrapVal) {
       el.removeAttribute("data-fly-unwrap");
     }

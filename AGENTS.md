@@ -14,13 +14,13 @@ Authoritative guide for AI/code agents contributing to this repository.
 
 ### Scripts (run from repo root)
 - **Install**: `npm ci`
-- **Lint**: `npm run lint`
-- **Lint (auto-fix)**: `npm run lint:fix`
+- **Lint**: `npm run lint` and `npm run lint:fix` (autofix)
 - **Unit tests + coverage**: `npm test`
-- **Performance tests**: `npm run test:perf`
+- **Run individual test file(s)**: `npm run test:file 'path/to/test.js'` (supports glob patterns like `'test/security/*.test.js'`)
 - **Build bundle**: `npm run build` → outputs `dist/faintly.js` and prints gzipped size (warns if over limit)
 - **Build (strict)**: `npm run build:strict` → fails if gzipped size exceeds 5120 bytes
 - **Clean**: `npm run clean`
+- **Verify all**: `npm run verify` → runs clean, build:strict, lint, and test in sequence (comprehensive check)
 
 ### Tests and coverage
 - Test runner: `@web/test-runner` with Mocha.
@@ -30,6 +30,11 @@ Authoritative guide for AI/code agents contributing to this repository.
 - Coverage thresholds (enforced in CI): 100% for statements, branches, functions, and lines.
 - Coverage reports: written to `coverage/`. Excludes `test/fixtures/**`, `test/snapshots/**`, `test/test-utils.js`, and `node_modules/**`.
 - When adding features, add or update tests to maintain 100% coverage in the `unit` group.
+- **Running individual test files**:
+  - Use `npm run test:file 'path/to/test.js'` to run a specific test file.
+  - Supports glob patterns: `npm run test:file 'test/security/*.test.js'`
+  - Note: This uses a separate config (`wtr-single.config.mjs`) because the main config's group-based file patterns take precedence over the `--files` flag.
+  - Do NOT use `npm test -- --files 'path/to/test.js'` as it will not work correctly with the group-based configuration.
 
 ### Linting and code style
 - ESLint config: `airbnb-base` via `.eslintrc.js` with `@babel/eslint-parser`.
@@ -64,6 +69,8 @@ Authoritative guide for AI/code agents contributing to this repository.
 - `test/`: unit/perf tests, fixtures, snapshots, and utilities
   - `test/security/`: tests for security module
 - `coverage/`: coverage output when tests are run with coverage
+- `web-test-runner.config.mjs`: main test runner config with group-based patterns
+- `wtr-single.config.mjs`: minimal config for running individual test files (bypasses groups)
 
 ### Contribution checklist for agents
 1. Install deps with `npm ci`.

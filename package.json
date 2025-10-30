@@ -1,11 +1,12 @@
 {
   "name": "faintly",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "HTML Markup Transformation Library for AEM Blocks",
   "main": "src/index.js",
   "scripts": {
     "test": "web-test-runner --node-resolve --coverage --group unit",
     "test:watch": "web-test-runner --node-resolve --coverage --watch --group unit",
+    "test:file": "web-test-runner --node-resolve --config wtr-single.config.mjs --files",
     "test:perf": "web-test-runner --node-resolve --group perf",
     "test:perf:watch": "web-test-runner --node-resolve --watch --group perf",
     "lint": "eslint . --ext .js,.mjs",
@@ -15,7 +16,8 @@
     "build:watch": "node scripts/build.mjs --watch",
     "check:size": "node scripts/build.mjs --check-size",
     "check:size:strict": "node scripts/build.mjs --check-size --strict",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "verify": "npm run clean && npm run build:strict && npm run lint && npm test"
   },
   "author": "Sean Steimer",
   "license": "Apache-2.0",

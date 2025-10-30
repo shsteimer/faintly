@@ -66,6 +66,37 @@ describe('processTest', () => {
       await processTest(el);
       expect(el.hasAttribute('data-fly-test')).to.equal(false);
     });
+
+    it('supports ${} wrapped expressions', async () => {
+      const parent = document.createElement('div');
+
+      const el = document.createElement('div');
+      parent.appendChild(el);
+      // eslint-disable-next-line no-template-curly-in-string
+      el.setAttribute('data-fly-test', '${includeDiv}');
+      const result = await processTest(el, { includeDiv: true });
+      expect(result).to.equal(true);
+      expect(el.parentNode).to.equal(parent);
+
+      const el2 = document.createElement('div');
+      parent.appendChild(el2);
+      // eslint-disable-next-line no-template-curly-in-string
+      el2.setAttribute('data-fly-test', '${includeDiv}');
+      const result2 = await processTest(el2, { includeDiv: false });
+      expect(result2).to.equal(false);
+      expect(el2.parentNode).to.equal(null);
+    });
+
+    it('supports ${} wrapped expressions with dot notation', async () => {
+      const parent = document.createElement('div');
+      const el = document.createElement('div');
+      parent.appendChild(el);
+      // eslint-disable-next-line no-template-curly-in-string
+      el.setAttribute('data-fly-test', '${user.isAdmin}');
+      const result = await processTest(el, { user: { isAdmin: true } });
+      expect(result).to.equal(true);
+      expect(el.parentNode).to.equal(parent);
+    });
   });
 
   describe('data-fly-not', () => {
@@ -128,6 +159,26 @@ describe('processTest', () => {
       el.setAttribute('data-fly-not', '');
       await processTest(el);
       expect(el.hasAttribute('data-fly-not')).to.equal(false);
+    });
+
+    it('supports ${} wrapped expressions', async () => {
+      const parent = document.createElement('div');
+
+      const el = document.createElement('div');
+      parent.appendChild(el);
+      // eslint-disable-next-line no-template-curly-in-string
+      el.setAttribute('data-fly-not', '${includeDiv}');
+      const result = await processTest(el, { includeDiv: true });
+      expect(result).to.equal(false);
+      expect(el.parentNode).to.equal(null);
+
+      const el2 = document.createElement('div');
+      parent.appendChild(el2);
+      // eslint-disable-next-line no-template-curly-in-string
+      el2.setAttribute('data-fly-not', '${includeDiv}');
+      const result2 = await processTest(el2, { includeDiv: false });
+      expect(result2).to.equal(true);
+      expect(el2.parentNode).to.equal(parent);
     });
   });
 });

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <!-- Real CSP that blocks unsafe-eval but allows everything else needed for testing -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:; style-src 'self' 'unsafe-inline'">
+  <title>utils:eval CSP Tests</title>
+</head>
+
+<body>
+  <script type="module">
+    /* eslint-env mocha */
+    /* eslint-disable no-unused-expressions */
+
+    import { runTests } from '@web/test-runner-mocha';
+    import { expect } from '@esm-bundle/chai';
+    import { resolveExpression } from '../../src/expressions.js';
+
+    /**
+     * These tests use a REAL Content Security Policy that blocks 'unsafe-eval'.
+     * This demonstrates what breaks when utils:eval() is used in a CSP-restricted environment.
+     */
+    runTests(() => {
+      describe('utils:eval() with real CSP blocking unsafe-eval', () => {
+        describe('what breaks when CSP blocks unsafe-eval', () => {
+          it('should throw EvalError for comparison operators', async () => {
+            const context = { count: 10 };
+            try {
+              await resolveExpression('utils:eval(count > 5)', context);
+              expect.fail('should have thrown EvalError when CSP blocks unsafe-eval');
+            } catch (error) {
+              expect(error).to.be.instanceOf(EvalError);
+            }
+          });
+
+          it('should throw EvalError for ternary expressions', async () => {
+            const context = { status: 'active', count: 5 };
+            try {
+              await resolveExpression('utils:eval(status === "active" ? count * 2 : 0)', context);
+              expect.fail('should have thrown EvalError when CSP blocks unsafe-eval');
+            } catch (error) {
+              expect(error).to.be.instanceOf(EvalError);
+            }
+          });
+
+          it('should throw EvalError for string method calls', async () => {
+            const context = { name: 'john' };
+            try {
+              await resolveExpression('utils:eval(name.toUpperCase())', context);
+              expect.fail('should have thrown EvalError when CSP blocks unsafe-eval');
+            } catch (error) {
+              expect(error).to.be.instanceOf(EvalError);
+            }
+          });
+
+          it('should throw EvalError for array methods with arrow functions', async () => {
+            const context = { numbers: [1, 2, 3] };
+            try {
+              await resolveExpression('utils:eval(numbers.map(n => n * 2))', context);
+              expect.fail('should have thrown EvalError when CSP blocks unsafe-eval');
+            } catch (error) {
+              expect(error).to.be.instanceOf(EvalError);
+            }
+          });
+
+          it('should throw EvalError for logical operators', async () => {
+            const context = { isValid: true, isActive: true };
+            try {
+              await resolveExpression('utils:eval(isValid && isActive)', context);
+              expect.fail('should have thrown EvalError when CSP blocks unsafe-eval');
+            } catch (error) {
+              expect(error).to.be.instanceOf(EvalError);
+            }
+          });
+
+          it('should throw EvalError for arithmetic operations', async () => {
+            const context = { a: 10, b: 5 };
+            try {
+              await resolveExpression('utils:eval(a + b * 2)', context);
+              expect.fail('should have thrown EvalError when CSP blocks unsafe-eval');
+            } catch (error) {
+              expect(error).to.be.instanceOf(EvalError);
+            }
+          });
+
+          it('should throw EvalError for custom helper functions', async () => {
+            const context = {
+              name: 'John',
+              count: 5,
+              formatMessage: (n, c) => `Hello ${n}, you have ${c} messages`,
+            };
+            try {
+              await resolveExpression('utils:eval(formatMessage(name, count))', context);
+              expect.fail('should have thrown EvalError when CSP blocks unsafe-eval');
+            } catch (error) {
+              expect(error).to.be.instanceOf(EvalError);
+            }
+          });
+        });
+
+        describe('what still works without unsafe-eval (non-utils:eval expressions)', () => {
+          it('should resolve simple property paths without utils:eval', async () => {
+            const context = { count: 10 };
+            const result = await resolveExpression('count', context);
+            expect(result).to.equal(10);
+          });
+
+          it('should resolve nested property paths without utils:eval', async () => {
+            const context = { user: { profile: { name: 'John' } } };
+            const result = await resolveExpression('user.profile.name', context);
+            expect(result).to.equal('John');
+          });
+
+          it('should call context functions without utils:eval', async () => {
+            const context = {
+              greeting: () => 'Hello',
+            };
+            const result = await resolveExpression('greeting', context);
+            expect(result).to.equal('Hello');
+          });
+
+          it('should access array length without utils:eval', async () => {
+            const context = { items: ['a', 'b', 'c'] };
+            const result = await resolveExpression('items.length', context);
+            expect(result).to.equal(3);
+          });
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>
