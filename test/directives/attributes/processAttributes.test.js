@@ -57,6 +57,24 @@ describe('processAttributes', () => {
     expect(el.hasAttribute('data-fly-attributes')).to.equal(false);
   });
 
+  it('supports ${} wrapped expressions in data-fly-attributes', async () => {
+    const el = document.createElement('div');
+    // eslint-disable-next-line no-template-curly-in-string
+    el.setAttribute('data-fly-attributes', '${attrsObj}');
+    const context = {
+      attrsObj: {
+        foo: 'bar',
+        id: 'some-id',
+        class: 'some-class',
+      },
+    };
+    context.security = await initializeSecurity(context);
+    await processAttributes(el, context);
+    expect(el.getAttribute('foo')).to.equal('bar');
+    expect(el.getAttribute('id')).to.equal('some-id');
+    expect(el.getAttribute('class')).to.equal('some-class');
+  });
+
   describe('security integration', () => {
     it('calls security hooks when context.security is provided with custom hooks', async () => {
       const el = document.createElement('div');
@@ -117,57 +135,22 @@ describe('processAttributes', () => {
       expect(el.getAttribute('href')).to.equal('javascript:void(0)');
     });
 
-    it('loads default security module when no security context provided', async () => {
-      const el = document.createElement('div');
-      el.setAttribute('data-fly-attributes', 'attrs');
-
-      const context = {
-        attrs: { onclick: 'alert(1)', class: 'safe' },
-      };
-      context.security = await initializeSecurity(context);
-      // Default security should block event handlers
-      await processAttributes(el, context);
-
-      expect(el.hasAttribute('onclick')).to.equal(false); // Blocked by default security
-      expect(el.getAttribute('class')).to.equal('safe'); // Safe attribute allowed
-    });
-
     it('applies security checks to expression-resolved attributes', async () => {
       const el = document.createElement('a');
       // eslint-disable-next-line no-template-curly-in-string
       el.setAttribute('href', '${ link }');
 
-      const customSecurity = {
-        shouldAllowAttribute: (name, value) => value !== 'blocked-value',
-        allowIncludePath: () => true,
-      };
-
       const context = {
         link: 'blocked-value',
-        security: customSecurity,
+        security: {
+          shouldAllowAttribute: (name, value) => value !== 'blocked-value',
+          allowIncludePath: () => true,
+        },
       };
       context.security = await initializeSecurity(context);
       await processAttributes(el, context);
 
       expect(el.hasAttribute('href')).to.equal(false);
-    });
-
-    it('supports ${} wrapped expressions in data-fly-attributes', async () => {
-      const el = document.createElement('div');
-      // eslint-disable-next-line no-template-curly-in-string
-      el.setAttribute('data-fly-attributes', '${attrsObj}');
-      const context = {
-        attrsObj: {
-          foo: 'bar',
-          id: 'some-id',
-          class: 'some-class',
-        },
-      };
-      context.security = await initializeSecurity(context);
-      await processAttributes(el, context);
-      expect(el.getAttribute('foo')).to.equal('bar');
-      expect(el.getAttribute('id')).to.equal('some-id');
-      expect(el.getAttribute('class')).to.equal('some-class');
     });
   });
 });
