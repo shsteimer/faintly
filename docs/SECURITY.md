@@ -181,10 +181,14 @@ await renderBlock(block, {
 
 Always sanitize user input before adding it to the context. **Adding any user-input to context to be used by faintly without first validating and sanitizing is inherently UNSAFE.**
 
+> [!DANGER]
+> **Never allow user input to become part of templates/HTML.** User input must ONLY go into the context, never into template strings, innerHTML, or attribute values that will be rendered. If users can control template content, they can inject expressions like `${utils:eval(...)}` to execute arbitrary code.
+
 **Guidelines:**
 - **Validate all user input** - URL parameters, form data, cookies, localStorage
+- **NEVER put user input in templates/HTML** - User input goes in context only. Never: `innerHTML = userInput`, `setAttribute('title', userInput)`, or template files with user content
 - **Use strings for user content** - Not DOM elements (strings are treated as plain text)
-- **Avoid `utils:eval()` with untrusted data** - It uses JavaScript's `Function` constructor, requires `unsafe-eval` CSP, and has full access to context. Prefer context functions for complex logic.
+- **Avoid `utils:eval()` with untrusted data** - It uses JavaScript's `Function` constructor with `with()` statement, requires `unsafe-eval` CSP, and **has full access to context AND browser globals** (`window`, `document`, etc.). An attacker could craft expressions like `utils:eval(window.location='https://evil.com')` or `utils:eval(document.cookie)`. Prefer context functions for complex logic.
 - **Layer your defenses** - Use CSP headers, input validation, and Faintly's security
 - **Audit context sources** - Know what data goes into your context and where it comes from
 - **Be careful with data URIs** - If enabling them, validate thoroughly or restrict to known-safe values

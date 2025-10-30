@@ -32,7 +32,6 @@ export function unwrapExpression(expression) {
  * @returns {Promise<any>} the data that was resolved
  */
 export async function resolveExpression(expression, context) {
-  // Handle utils:eval() syntax
   const trimmedExpression = expression.trim();
   if (trimmedExpression.startsWith('utils:eval(') && trimmedExpression.endsWith(')')) {
     const expr = trimmedExpression.slice(11, -1); // Extract expression from utils:eval(...)

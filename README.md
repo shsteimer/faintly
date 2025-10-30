@@ -93,6 +93,10 @@ await renderBlock(block); // Security automatically enabled
 - ⚠️ **Context data** - The rendering context is fully trusted
 - ⚠️ **Pre-built DOM elements** - Elements passed through context are inserted as-is
 - ⚠️ **`utils:eval()` expressions** - JavaScript evaluation requires `unsafe-eval` CSP and trusts context data
+- ⚠️ **Templates/HTML** - Templates are trusted. Never allow user input in templates, innerHTML, or setAttribute - expressions like `${...}` will be evaluated
+
+> [!DANGER]
+> **Never allow user input to become part of templates or HTML.** User input must ONLY go into the context. If users can control template content, they can inject `${utils:eval(...)}` to execute arbitrary code.
 
 For detailed information about the security model, configuration options, custom security hooks, and best practices, see **[Security Documentation](./docs/SECURITY.md)**.
 
@@ -141,11 +145,12 @@ Faintly supports a simple expression syntax for resolving data from the renderin
 > **⚠️ This feature uses JavaScript's `Function` constructor (similar to `eval`)**
 >
 > - Requires Content Security Policy with `'unsafe-eval'` directive
-> - The entire context is accessible to evaluated expressions
-> - **Never put untrusted user input in the context** (this applies to all Faintly features)
+> - **Has full access to context AND browser globals** (`window`, `document`, etc.)
+> - An attacker with control over context data could craft expressions like `utils:eval(window.location='https://evil.com')` or `utils:eval(document.cookie)`
+> - **Never put untrusted user input in the context** when using `utils:eval()`
 > - If your CSP blocks `unsafe-eval`, this feature won't work
 >
-> Use `utils:eval()` thoughtfully. For complex logic, consider context functions instead.
+> Use `utils:eval()` thoughtfully. For complex logic, context functions are safer and more maintainable.
 
 When a bit more logic is required, you canuse `utils:eval()` to evaluate JavaScript expressions. Some examples:
 
